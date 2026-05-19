@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>PayYaar</title>
+
+    <link rel="stylesheet" href="style.css">
+
+    <!-- GOOGLE FONT -->
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+
+</head>
+
+<body>
+
+    <!-- NAVBAR -->
+
+    <nav class="navbar">
+
+        <div class="logo-section">
+
+            <img
+                src="logo.png"
+                alt="PayYaar Logo">
+
+            <h2>PayYaar</h2>
+
+        </div>
+
+        <button
+            class="nav-btn"
+            onclick="scrollToDashboard()">
+
+            Get Started
+
+        </button>
+
+    </nav>
+
+    <!-- BACKGROUND BLOBS -->
+
+    <div class="background">
+
+        <div class="blob blob1"></div>
+
+        <div class="blob blob2"></div>
+
+    </div>
+
+    <!-- STATS SECTION -->
+
+    <div class="stats-container">
+
+        <div class="stat-card">
+
+            <h3>💸 Total Expenses</h3>
+
+            <h1 id="totalExpenses">
+                ₹0
+            </h1>
+
+        </div>
+
+        <div class="stat-card">
+
+            <h3>👯 Friends</h3>
+
+            <h1 id="friendCount">
+                0
+            </h1>
+
+        </div>
+
+        <div class="stat-card">
+
+            <h3>📜 Transactions</h3>
+
+            <h1 id="transactionCount">
+                0
+            </h1>
+
+        </div>
+
+    </div>
+
+    <!-- HERO SECTION -->
+
+    <section class="hero">
+
+        <div class="hero-text">
+
+            <h1>
+                Split hostel expenses
+                <br>
+                without awkwardness
+            </h1>
+
+            <p>
+                Track expenses, split bills,
+                and manage hostel payments
+                beautifully with your yaar.
+            </p>
+
+            
+
+        </div>
+
+    </section>
+
+    <!-- DASHBOARD -->
+
+    <section class="dashboard" id="dashboard">
+
+        <h2 class="section-title">
+            Dashboard
+        </h2>
+
+        <!-- TOTAL EXPENSES CARD -->
+
+        <div class="total-card">
+
+            <h3>Total Group Expenses</h3>
+
+            <h1 id="totalExpenses">
+                ₹0
+            </h1>
+
+        </div>
+
+    </section>
+
+    <!-- GROUPS & EXPENSES -->
+
+    <section class="groups-expenses">
+
+        <!-- GROUP CARD -->
+
+        <div class="group-card">
+
+            <h3>🏡 Expense Group</h3>
+
+            <input
+                type="text"
+                id="groupName"
+                placeholder="Example: Goa Trip">
+
+            <button
+                class="group-btn"
+                onclick="createGroup()">
+
+                ✨ Create Group
+
+            </button>
+
+            <h2 id="currentGroup"></h2>
+
+        </div>
+
+        <!-- BUDGET CARD -->
+
+        <div class="budget-card">
+
+            <h3>💰 Set Group Budget</h3>
+
+            <input
+                type="number"
+                id="budgetInput"
+                placeholder="Enter budget limit">
+
+            <button
+                class="budget-btn"
+                onclick="setBudget()">
+
+                💜 Set Budget
+
+            </button>
+
+            <h2 id="budgetDisplay">
+                Budget: ₹0
+            </h2>
+
+            <p id="budgetWarning"></p>
+
+            <div class="progress-container">
+
+                <div id="progressBar"></div>
+
+            </div>
+
+        </div>
+
+        <!-- ADD FRIEND CARD -->
+
+        <div class="card">
+
+            <h3>👯 Add Friend</h3>
+
+            <input
+                type="text"
+                id="friendInput"
+                placeholder="Enter friend name">
+
+            <button onclick="addFriend()">
+                Add Friend
+            </button>
+
+            <ul id="friendList"></ul>
+
+        </div>
+
+        <!-- ADD EXPENSE CARD -->
+
+        <div class="card">
+
+            <h3>💰 Add Expense</h3>
+
+            <input
+                type="text"
+                id="expenseTitle"
+                placeholder="Expense title">
+
+            <input
+                type="number"
+                id="expenseAmount"
+                placeholder="Amount">
+
+           <!-- WHO PAID -->
+
+<select id="paidBy">
+
+    <option value="">
+        Select who paid
+    </option>
+
+</select>
+
+<!-- SPLIT BETWEEN -->
+
+<p class="split-title">
+    To be split between
+</p>
+
+
+
+
+<div id="splitPeople"></div>
+
+            <button onclick="addExpense()">
+                Add Expense
+            </button>
+
+        </div>
+
+        <!-- EXPENSE HISTORY -->
+
+        <div class="card">
+
+            <h3>📜 Expense History</h3>
+
+            <div id="expenseList">
+
+                <p class="empty-text">
+                    No expenses added yet ✨
+                </p>
+
+            </div>
+
+        </div>
+
+        <div class="card">
+
+            <h3>💸 Balances</h3>
+
+            <div id="balances"></div>
+
+        </div>
+
+    </section>
+
+    <footer>
+
+        Made with 💜 for hostel life
+
+    </footer>
+    <script type="module">
+
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+import {
+
+    getFirestore,
+
+    collection,
+
+    addDoc
+
+}
+
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+
+    apiKey: "AIzaSyAf8zLED_NjsDzV-Ode37loWrxcXdPAUhY",
+
+    authDomain: "payyaar-23dde.firebaseapp.com",
+
+    projectId: "payyaar-23dde",
+
+    storageBucket: "payyaar-23dde.firebasestorage.app",
+
+    messagingSenderId: "472162459054",
+
+    appId: "1:472162459054:web:c195d20723d8592f52bc3f",
+
+    measurementId: "G-QT222GHG6L"
+};
+
+const app =
+initializeApp(firebaseConfig);
+
+const db =
+getFirestore(app);
+
+console.log("Firebase Connected 🚀");
+
+// MAKE FUNCTION GLOBAL
+
+window.createGroup =
+async function() {
+
+    const groupInput =
+        document.getElementById("groupName");
+
+    const groupName =
+        groupInput.value;
+
+    if(groupName === "") {
+
+        alert("Enter group name");
+
+        return;
+    }
+
+    try {
+
+        const docRef =
+            await addDoc(
+
+                collection(db, "groups"),
+
+                {
+
+                    name: groupName,
+
+                    createdAt:
+                    new Date()
+                }
+            );
+
+        document.getElementById(
+            "currentGroup"
+        ).innerText = groupName;
+
+        alert(
+            "Group Created 🎉"
+        );
+
+        console.log(
+            "Document ID:",
+            docRef.id
+        );
+
+        groupInput.value = "";
+
+    }
+
+    catch(error) {
+
+        console.error(error);
+
+        alert(
+            "Error creating group"
+        );
+    }
+};
+
+</script>
+    <script src="script.js"></script>
+
+</body>
+
+</html>
