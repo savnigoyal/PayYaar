@@ -2,6 +2,27 @@ let friends = [];
 
 let expenses = [];
 
+function getUniquePeople(people) {
+
+    const seen = new Set();
+
+    return people
+        .map(person => person.trim())
+        .filter(person => {
+
+            const key = person.toLowerCase();
+
+            if(person === "" || seen.has(key)) {
+
+                return false;
+            }
+
+            seen.add(key);
+
+            return true;
+        });
+}
+
 // ADD FRIEND
 
 function addFriend() {
@@ -14,6 +35,15 @@ function addFriend() {
     if(name === "") {
 
         alert("Please enter a friend name");
+
+        return;
+    }
+
+    if(getUniquePeople(friends).some(friend =>
+        friend.toLowerCase() === name.toLowerCase()
+    )) {
+
+        alert("This friend is already added");
 
         return;
     }
@@ -45,7 +75,7 @@ function displayFriends() {
 
     list.innerHTML = "";
 
-    friends.forEach(friend => {
+    getUniquePeople(friends).forEach(friend => {
 
         list.innerHTML += `
             <li>${friend}</li>
@@ -66,7 +96,7 @@ function updatePaidByOptions() {
         </option>
     `;
 
-    friends.forEach(friend => {
+    getUniquePeople(friends).forEach(friend => {
 
         paidBy.innerHTML += `
             <option value="${friend}">
@@ -100,7 +130,7 @@ function updateSplitOptions() {
     </div>
 `;
 
-    friends.forEach(friend => {
+    getUniquePeople(friends).forEach(friend => {
 
         splitPeople.innerHTML += `
 
@@ -153,6 +183,9 @@ function addExpense() {
 
         splitBetween.push(person.value);
     });
+
+    splitBetween =
+        getUniquePeople(splitBetween);
 
     if(
         title === "" ||
@@ -238,6 +271,17 @@ function displayExpenses() {
 
     expenses.forEach((expense, index) => {
 
+        const splitBetween =
+            getUniquePeople(expense.splitBetween);
+
+        if(splitBetween.length === 0) {
+
+            return;
+        }
+
+        const share =
+            expense.amount / splitBetween.length;
+
         expenseList.innerHTML += `
 
             <div class="expense-item">
@@ -255,12 +299,12 @@ function displayExpenses() {
                 <br>
 
                 Split Between:
-                ${expense.splitBetween.join(", ")}
+                ${splitBetween.join(", ")}
 
                 <br>
 
                 Each Person Pays:
-                ₹${expense.share.toFixed(2)}
+                ₹${share.toFixed(2)}
 
                 <br><br>
 
@@ -284,7 +328,7 @@ function calculateBalances() {
 
     // INITIALIZE BALANCES
 
-    friends.forEach(friend => {
+    getUniquePeople(friends).forEach(friend => {
 
         balances[friend] = 0;
     });
@@ -293,9 +337,22 @@ function calculateBalances() {
 
     expenses.forEach(expense => {
 
+        const splitBetween =
+            getUniquePeople(expense.splitBetween);
+
+        if(splitBetween.length === 0) {
+
+            return;
+        }
+
         const share =
             expense.amount /
-            expense.splitBetween.length;
+            splitBetween.length;
+
+        if(balances[expense.paidBy] === undefined) {
+
+            balances[expense.paidBy] = 0;
+        }
 
         // Person who paid gets money
 
@@ -304,7 +361,12 @@ function calculateBalances() {
 
         // Others owe their share
 
-        expense.splitBetween.forEach(person => {
+        splitBetween.forEach(person => {
+
+            if(balances[person] === undefined) {
+
+                balances[person] = 0;
+            }
 
             balances[person] -= share;
         });
@@ -412,7 +474,7 @@ function updateStats() {
 
     document.getElementById(
         "friendCount"
-    ).innerText = friends.length;
+    ).innerText = getUniquePeople(friends).length;
 
     document.getElementById(
         "transactionCount"
@@ -473,7 +535,14 @@ window.onload = function() {
     if(savedFriends){
 
         friends =
-            JSON.parse(savedFriends);
+            getUniquePeople(
+                JSON.parse(savedFriends)
+            );
+
+        localStorage.setItem(
+            "friends",
+            JSON.stringify(friends)
+        );
 
         displayFriends();
 
@@ -491,6 +560,29 @@ window.onload = function() {
 
         expenses =
             JSON.parse(savedExpenses);
+
+        expenses =
+            expenses.map(expense => {
+
+                const splitBetween =
+                    getUniquePeople(expense.splitBetween);
+
+                return {
+
+                    ...expense,
+                    splitBetween,
+                    share:
+                        splitBetween.length === 0
+                            ? 0
+                            : expense.amount /
+                                splitBetween.length
+                };
+            });
+
+        localStorage.setItem(
+            "expenses",
+            JSON.stringify(expenses)
+        );
 
         displayExpenses();
 
