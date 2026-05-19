@@ -169,6 +169,11 @@ function addExpense() {
 
     expenses.push(expense);
 
+    localStorage.setItem(
+        "expenses",
+        JSON.stringify(expenses)
+    );
+
     displayExpenses();
 
     updateTotalExpenses();
@@ -198,44 +203,20 @@ function displayExpenses() {
     const expenseList =
         document.getElementById("expenseList");
 
-    expenseList.innerHTML += `
+    expenseList.innerHTML = "";
 
-    <div class="expense-item">
+    if(expenses.length === 0) {
 
-        <strong>${expense.title}</strong>
+        expenseList.innerHTML = `
+            <p class="empty-text">
+                No expenses added yet ✨
+            </p>
+        `;
 
-        <br><br>
+        return;
+    }
 
-        Total: ₹${expense.amount}
-
-        <br>
-
-        Paid By: ${expense.paidBy}
-
-        <br>
-
-        Split Between:
-        ${expense.splitBetween.join(", ")}
-
-        <br>
-
-        Each Person Pays:
-        ₹${expense.share.toFixed(2)}
-
-        <br><br>
-
-        <button
-            onclick="deleteExpense(${index})"
-            class="delete-btn">
-
-            Delete
-
-        </button>
-
-    </div>
-`;
-
-    expenses.forEach(expense => {
+    expenses.forEach((expense, index) => {
 
         expenseList.innerHTML += `
 
@@ -261,11 +242,20 @@ function displayExpenses() {
                 Each Person Pays:
                 ₹${expense.share.toFixed(2)}
 
+                <br><br>
+
+                <button
+                    onclick="deleteExpense(${index})"
+                    class="delete-btn">
+
+                    Delete
+
+                </button>
+
             </div>
         `;
     });
 }
-
 // CALCULATE BALANCES
 
 function calculateBalances() {
