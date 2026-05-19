@@ -118,6 +118,17 @@ function updateSplitOptions() {
     });
 }
 
+function toggleAllPeople(selectAllBox) {
+
+    document
+        .querySelectorAll(".split-check")
+        .forEach(box => {
+
+            box.checked = selectAllBox.checked;
+            box.disabled = selectAllBox.checked;
+        });
+}
+
 // ADD EXPENSE
 
 function addExpense() {
@@ -193,7 +204,16 @@ function addExpense() {
         .forEach(box => {
 
             box.checked = false;
+            box.disabled = false;
         });
+
+    const selectAll =
+        document.getElementById("selectAll");
+
+    if(selectAll) {
+
+        selectAll.checked = false;
+    }
 }
 
 // DISPLAY EXPENSES
