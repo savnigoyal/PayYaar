@@ -26,6 +26,10 @@ body{
     position:relative;
 }
 
+img{
+    max-width:100%;
+}
+
 /* BACKGROUND GLOW */
 
 body::before{
@@ -115,13 +119,15 @@ body::before{
 
     width:100%;
 
-    padding:22px 6%;
+    padding:18px 6%;
 
     display:flex;
 
     justify-content:space-between;
 
     align-items:center;
+
+    gap:16px;
 
     position:sticky;
 
@@ -149,9 +155,9 @@ body::before{
 
 .logo-section img{
 
-    width:85px;
+    width:72px;
 
-    height:85px;
+    height:72px;
 
     border-radius:20px;
 
@@ -161,7 +167,7 @@ body::before{
 
     color:#5B3CC4;
 
-    font-size:34px;
+    font-size:30px;
 
     font-weight:700;
 }
@@ -218,13 +224,11 @@ body::before{
 
 .hero{
 
-    width:90%;
-
-    max-width:1400px;
+    width:min(90%, 1180px);
 
     margin:auto;
 
-    min-height:90vh;
+    min-height:68vh;
 
     display:flex;
 
@@ -237,16 +241,16 @@ body::before{
 
 .hero-text{
 
-    width:60%;
+    width:min(100%, 760px);
 }
 
 .hero-text h1{
 
-    font-size:95px;
+    font-size:76px;
 
-    line-height:0.95;
+    line-height:1;
 
-    letter-spacing:-4px;
+    letter-spacing:0;
 
     color:#5B3CC4;
 
@@ -255,7 +259,7 @@ body::before{
 
 .hero-text p{
 
-    font-size:26px;
+    font-size:22px;
 
     line-height:1.7;
 
@@ -307,16 +311,14 @@ body::before{
 
 .stats-container{
 
-    width:90%;
+    width:min(90%, 1180px);
 
-    max-width:1400px;
-
-    margin:120px auto 60px;
+    margin:70px auto 50px;
 
     display:grid;
 
     grid-template-columns:
-    repeat(3,1fr);
+    repeat(3,minmax(0,1fr));
 
     gap:28px;
 }
@@ -368,9 +370,7 @@ body::before{
 
 .dashboard{
 
-    width:90%;
-
-    max-width:1400px;
+    width:min(90%, 1180px);
 
     margin:40px auto;
 }
@@ -427,16 +427,14 @@ body::before{
 
 .groups-expenses{
 
-    width:90%;
-
-    max-width:1400px;
+    width:min(90%, 1180px);
 
     margin:50px auto;
 
     display:grid;
 
     grid-template-columns:
-    repeat(2,1fr);
+    repeat(2,minmax(0,1fr));
 
     gap:30px;
 }
@@ -499,11 +497,17 @@ select{
     background:
     rgba(255,255,255,0.65);
 
-    font-size:17px;
+    font-size:16px;
 
     margin-bottom:18px;
 
     outline:none;
+}
+
+button,
+input,
+select{
+    min-height:48px;
 }
 
 /* BUTTONS */
@@ -597,6 +601,8 @@ button:hover{
     height:20px;
 
     accent-color:#8B5CF6;
+
+    margin-bottom:0;
 }
 
 /* EXPENSE ITEM */
@@ -615,6 +621,8 @@ button:hover{
     color:#5B3CC4;
 
     line-height:1.7;
+
+    overflow-wrap:anywhere;
 }
 
 /* BALANCE */
@@ -633,6 +641,8 @@ button:hover{
     color:#5B3CC4;
 
     font-weight:600;
+
+    overflow-wrap:anywhere;
 }
 
 /* BUDGET BAR */
@@ -697,11 +707,28 @@ footer{
 
 @media(max-width:1000px){
 
+    .navbar{
+
+        padding:16px 5%;
+    }
+
+    .logo-section img{
+
+        width:58px;
+
+        height:58px;
+    }
+
+    .logo-section h2{
+
+        font-size:26px;
+    }
+
     .hero{
 
         min-height:auto;
 
-        padding:100px 0 40px;
+        padding:70px 0 32px;
     }
 
     .hero-text{
@@ -709,7 +736,13 @@ footer{
         width:100%;
     }
 
-    
+    .hero-text h1{
+
+        font-size:56px;
+
+        line-height:1.08;
+    }
+
     .hero-text p{
 
         font-size:20px;
@@ -719,38 +752,147 @@ footer{
     .groups-expenses{
 
         grid-template-columns:1fr;
+
+        gap:22px;
+    }
+
+    .stats-container{
+
+        margin:40px auto;
+    }
+
+    .section-title{
+
+        font-size:44px;
+    }
+
+    .total-card h1{
+
+        font-size:58px;
     }
 }
 
 @media(max-width:600px){
 
+    .navbar{
+
+        align-items:flex-start;
+
+        flex-direction:column;
+
+        padding:14px 5%;
+    }
+
+    .nav-btn{
+
+        width:100% !important;
+
+        padding:13px 18px;
+
+        border-radius:14px;
+    }
+
    .hero-text h1{
 
-    font-size:12px;
+        font-size:38px;
 
-    line-height:1.4;
+        line-height:1.15;
 
-    letter-spacing:0px;
+        color:#5B3CC4;
 
-    color:#5B3CC4;
+        margin-bottom:16px;
 
-    margin-bottom:12px;
+        font-weight:700;
+    }
 
-    font-weight:600;
-}
     .hero-text p{
 
-        font-size:18px;
+        font-size:16px;
+
+        line-height:1.6;
+    }
+
+    .stat-card,
+    .card,
+    .group-card,
+    .budget-card{
+
+        padding:22px;
+
+        border-radius:22px;
     }
 
     .section-title{
 
-        font-size:40px;
+        font-size:34px;
+    }
+
+    .stat-card h1{
+
+        font-size:42px;
     }
 
     .total-card h1{
 
-        font-size:52px;
+        font-size:46px;
+    }
+
+    .total-card{
+
+        padding:30px 22px;
+
+        border-radius:24px;
+    }
+
+    .card h3,
+    .group-card h3,
+    .budget-card h3{
+
+        font-size:24px;
+    }
+
+    input,
+    select,
+    .card button,
+    .group-btn,
+    .budget-btn{
+
+        border-radius:14px;
+
+        padding:15px;
+    }
+}
+
+@media(max-width:420px){
+
+    .logo-section{
+
+        gap:10px;
+    }
+
+    .logo-section img{
+
+        width:48px;
+
+        height:48px;
+    }
+
+    .logo-section h2{
+
+        font-size:24px;
+    }
+
+    .hero-text h1{
+
+        font-size:32px;
+    }
+
+    .stats-container,
+    .dashboard,
+    .groups-expenses,
+    .hero{
+
+        width:92%;
     }
 }
 .split-title{
