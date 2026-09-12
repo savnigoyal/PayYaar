@@ -43,7 +43,34 @@ window.addEventListener("DOMContentLoaded", () => {
   checkAuthUser();
   loadStoredData();
   renderAllComponents();
+  handleHashRouting();
 });
+
+window.addEventListener("hashchange", handleHashRouting);
+window.addEventListener("popstate", handleHashRouting);
+
+function navigateTo(path) {
+  window.location.hash = path;
+}
+
+function handleHashRouting() {
+  const hash = window.location.hash || "#home";
+
+  if (hash.startsWith("#hostel")) {
+    switchMainTab("hostel", false);
+    const parts = hash.split("/");
+    const subRoute = parts[1] || "overview";
+    switchHostelSubTab(subRoute, false);
+  } else if (hash === "#expenses") {
+    switchMainTab("expenses", false);
+  } else if (hash === "#transactions") {
+    switchMainTab("transactions", false);
+  } else if (hash === "#profile") {
+    switchMainTab("profile", false);
+  } else {
+    switchMainTab("home", false);
+  }
+}
 
 function purgeLegacyDummyData() {
   // Purge any cached legacy dummy data from earlier sessions
@@ -248,7 +275,7 @@ function renderAllComponents() {
 
 // ==================== MAIN & SUB TAB NAVIGATION ====================
 
-function switchMainTab(tabName) {
+function switchMainTab(tabName, updateHash = true) {
   currentMainTab = tabName;
 
   document.querySelectorAll(".main-view").forEach(v => v.classList.add("hidden"));
@@ -266,6 +293,15 @@ function switchMainTab(tabName) {
   const mobBtn = document.getElementById(`mobileTabNav-${tabName}`);
   if (mobBtn) mobBtn.classList.add("text-primary", "font-bold", "active");
 
+  if (updateHash) {
+    const targetHash = tabName === "hostel" 
+      ? (currentHostelSubTab && currentHostelSubTab !== "overview" ? `#hostel/${currentHostelSubTab}` : "#hostel") 
+      : `#${tabName}`;
+    if (window.location.hash !== targetHash) {
+      window.history.pushState(null, "", targetHash);
+    }
+  }
+
   if (tabName === "home") renderHomeView();
   if (tabName === "hostel") renderHostelView();
   if (tabName === "expenses") renderExpensesView();
@@ -274,26 +310,31 @@ function switchMainTab(tabName) {
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
-function switchHostelSubTab(subTabName) {
+function switchHostelSubTab(subTabName, updateHash = true) {
   currentHostelSubTab = subTabName;
 
   document.querySelectorAll(".hostel-subview").forEach(v => v.classList.add("hidden"));
   const activeSubSec = document.getElementById(`hostelSubView-${subTabName}`);
   if (activeSubSec) activeSubSec.classList.remove("hidden");
 
-  document.querySelectorAll(".sub-tab-btn").forEach(b => {
-    b.className = "sub-tab-btn px-4 py-2 rounded-xl text-xs font-medium bg-surface-container text-on-surface-variant hover:bg-surface-container-high transition-all flex items-center gap-1.5";
-  });
-
-  const btn = document.getElementById(`subTabNav-${subTabName}`);
-  if (btn) btn.className = "sub-tab-btn active px-4 py-2 rounded-xl text-xs font-bold bg-primary text-on-primary shadow-2xs transition-all flex items-center gap-1.5";
+  if (updateHash) {
+    const targetHash = subTabName === "overview" ? "#hostel" : `#hostel/${subTabName}`;
+    if (window.location.hash !== targetHash) {
+      window.history.pushState(null, "", targetHash);
+    }
+  }
 
   if (subTabName === "overview") renderHostelOverview();
+  if (subTabName === "expenses") renderHostelExpensesView();
   if (subTabName === "stock") renderFullStockView();
   if (subTabName === "wallet") renderFullWalletView();
   if (subTabName === "ious") renderFullIOUsView();
+  if (subTabName === "settle") renderHostelSettleView();
+  if (subTabName === "activity") renderHostelActivityView();
   if (subTabName === "bills") renderFullBillsView();
   if (subTabName === "stats") renderFullStatsView();
+
+  window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 function populateSelectDropdowns() {
@@ -392,71 +433,248 @@ function renderHomeView() {
 // ==================== 2. HOSTEL VIEW RENDERER ====================
 
 function renderHostelView() {
-  const membersSummary = document.getElementById("hostelMembersSummary");
-  if (membersSummary) {
-    if (friends.length === 0) membersSummary.innerText = "Members: No roommates added yet";
-    else membersSummary.innerText = `Members: ${friends.join(", ")}`;
-  }
-
-  const walletSummary = document.getElementById("hostelWalletSummary");
-  if (walletSummary) walletSummary.innerText = `₹${wallet.balance.toLocaleString()}`;
-
-  const iouSummary = document.getElementById("hostelIOUSummary");
-  if (iouSummary) {
-    const pendingCount = ious.filter(i => i.status === "Pending").length;
-    iouSummary.innerText = `${pendingCount} Items`;
-  }
-
-  switchHostelSubTab(currentHostelSubTab);
+  switchHostelSubTab(currentHostelSubTab, false);
 }
 
 function renderHostelOverview() {
-  const overviewStockList = document.getElementById("overviewStockList");
-  if (overviewStockList) {
-    overviewStockList.innerHTML = "";
-    if (stock.length === 0) {
-      overviewStockList.innerHTML = `<p class="text-xs text-on-surface-variant italic">No stock items added yet.</p>`;
-    } else {
-      stock.slice(0, 3).forEach(item => {
-        const isLow = item.quantity <= item.lowAlert;
-        overviewStockList.innerHTML += `
-          <div class="flex items-center justify-between p-2.5 rounded-xl bg-surface-container-low">
-            <div class="flex items-center gap-2.5">
-              <span class="text-xl">${item.icon}</span>
-              <div>
-                <span class="font-headline-sm text-xs font-bold text-on-surface block">${item.name}</span>
-                <span class="font-label-sm text-[11px] ${isLow ? 'text-error font-semibold' : 'text-on-surface-variant'}">
-                  ${item.quantity} ${item.unit} left ${isLow ? '⚠️ Low' : ''}
-                </span>
-              </div>
-            </div>
-            <button onclick="quickUseStock(${item.id})" class="px-2.5 py-1 rounded-lg bg-primary text-on-primary font-label-md text-xs font-bold active:scale-95 transition-all">
-              Use 1
-            </button>
-          </div>
-        `;
-      });
-    }
+  const roomHeading = document.getElementById("hubRoomHeading");
+  if (roomHeading) {
+    roomHeading.innerText = `🏠 ${currentUser ? currentUser.room : "Block B · Room 204"}`;
   }
 
-  const overviewWalletBalance = document.getElementById("overviewWalletBalance");
-  if (overviewWalletBalance) overviewWalletBalance.innerText = `₹${wallet.balance.toLocaleString()}`;
+  const membersSummary = document.getElementById("hubMembersSummary");
+  if (membersSummary) {
+    membersSummary.innerText = `${friends.length} Member${friends.length === 1 ? '' : 's'}`;
+  }
+
+  const netBalances = calculateNetBalances();
+  const meName = currentUser ? currentUser.name : "You";
+  const myNet = netBalances[meName] || 0;
+
+  const hubOwedLabel = document.getElementById("hubOwedLabel");
+  const hubOwedAmount = document.getElementById("hubOwedAmount");
+  const hubOwedSubtitle = document.getElementById("hubOwedSubtitle");
+
+  if (myNet >= 0) {
+    if (hubOwedLabel) hubOwedLabel.innerText = "You're owed";
+    if (hubOwedAmount) hubOwedAmount.innerText = `₹${Math.round(myNet).toLocaleString()}`;
+    if (hubOwedSubtitle) hubOwedSubtitle.innerText = `+₹${Math.round(myNet).toLocaleString()} lent to room`;
+  } else {
+    if (hubOwedLabel) hubOwedLabel.innerText = "You owe";
+    if (hubOwedAmount) hubOwedAmount.innerText = `₹${Math.round(Math.abs(myNet)).toLocaleString()}`;
+    if (hubOwedSubtitle) hubOwedSubtitle.innerText = `-₹${Math.round(Math.abs(myNet)).toLocaleString()} owe room`;
+  }
+
+  const hubWalletBalance = document.getElementById("hubWalletBalance");
+  if (hubWalletBalance) hubWalletBalance.innerText = `₹${wallet.balance.toLocaleString()}`;
+
+  const pendingIOUsCount = ious.filter(i => i.status === "Pending").length;
+  const hubActiveIOUsCount = document.getElementById("hubActiveIOUsCount");
+  if (hubActiveIOUsCount) hubActiveIOUsCount.innerText = `${pendingIOUsCount}`;
+
+  // 6 Nav Card Summaries
+  const totalExpensesAmount = expenses.reduce((s, e) => s + e.amount, 0);
+  const hubNavExpensesSummary = document.getElementById("hubNavExpensesSummary");
+  if (hubNavExpensesSummary) hubNavExpensesSummary.innerText = `₹${totalExpensesAmount.toLocaleString()} this month`;
+
+  const hubNavStockSummary = document.getElementById("hubNavStockSummary");
+  if (hubNavStockSummary) hubNavStockSummary.innerText = `${stock.length} item${stock.length === 1 ? '' : 's'}`;
+
+  const hubNavIOUsSummary = document.getElementById("hubNavIOUsSummary");
+  if (hubNavIOUsSummary) hubNavIOUsSummary.innerText = `${pendingIOUsCount} active`;
+
+  const hubNavWalletSummary = document.getElementById("hubNavWalletSummary");
+  if (hubNavWalletSummary) hubNavWalletSummary.innerText = `₹${wallet.balance.toLocaleString()} available`;
+
+  const settlementPlan = calculateSmartSettlementPlan();
+  const hubNavSettleSummary = document.getElementById("hubNavSettleSummary");
+  if (hubNavSettleSummary) hubNavSettleSummary.innerText = `${settlementPlan.length} payment${settlementPlan.length === 1 ? '' : 's'} recommended`;
+
+  const hubNavActivitySummary = document.getElementById("hubNavActivitySummary");
+  if (hubNavActivitySummary) {
+    hubNavActivitySummary.innerText = activityFeed.length > 0 ? `${activityFeed[0].time}` : "Real-time room log";
+  }
+}
+
+// ==================== DEDICATED HOSTEL SECTION RENDERERS ====================
+
+function renderHostelExpensesView() {
+  const totalSpent = expenses.reduce((s, e) => s + e.amount, 0);
+  const totalMonthEl = document.getElementById("hostelExpensesTotalMonth");
+  if (totalMonthEl) totalMonthEl.innerText = `₹${totalSpent.toLocaleString()}`;
+
+  const countBadgeEl = document.getElementById("hostelExpensesCountBadge");
+  if (countBadgeEl) countBadgeEl.innerText = `${expenses.length} Expense${expenses.length === 1 ? '' : 's'}`;
+
+  const container = document.getElementById("hostelExpensesDedicatedList");
+  if (!container) return;
+
+  container.innerHTML = "";
+  if (expenses.length === 0) {
+    container.innerHTML = `
+      <div class="py-12 text-center text-on-surface-variant italic space-y-2">
+        <span class="text-4xl block">🍕</span>
+        <p class="font-headline-sm text-sm font-bold text-on-surface">No Expenses Logged Yet</p>
+        <p class="text-xs">Add food, Wi-Fi, cleaning, or room supplies to start tracking!</p>
+      </div>
+    `;
+    return;
+  }
+
+  expenses.forEach(exp => {
+    const icon = exp.category.includes('Food') ? '🍜' : exp.category.includes('Groceries') ? '🛒' : exp.category.includes('Bills') ? '📶' : exp.category.includes('Rent') ? '🧹' : exp.category.includes('Cab') ? '🛵' : '💸';
+    container.innerHTML += `
+      <div class="py-3.5 flex items-center justify-between gap-3">
+        <div class="flex items-center gap-3 min-w-0">
+          <div class="w-10 h-10 rounded-xl bg-surface-container flex items-center justify-center text-xl shrink-0">
+            ${icon}
+          </div>
+          <div class="min-w-0">
+            <span class="font-headline-sm text-sm font-bold text-on-surface block truncate">${exp.title}</span>
+            <span class="font-label-sm text-xs text-on-surface-variant truncate block">Paid by ${exp.paidBy} · ${exp.date}</span>
+          </div>
+        </div>
+        <div class="text-right shrink-0">
+          <span class="font-headline-sm text-sm font-bold text-on-surface block">₹${exp.amount.toLocaleString()}</span>
+          <span class="font-label-sm text-[11px] text-tertiary font-semibold">${exp.tag || 'Instant Split ⚡'}</span>
+        </div>
+      </div>
+    `;
+  });
+}
+
+function renderHostelSettleView() {
+  const plan = calculateSmartSettlementPlan();
+  const subtitle = document.getElementById("settlePlanSubtitle");
+  if (subtitle) {
+    subtitle.innerText = `${plan.length} payment${plan.length === 1 ? '' : 's'} can settle all current balances.`;
+  }
+
+  renderSmartSettlementContainer("hostelSettlePlanContainer", null);
+  renderRoommateBalancesToContainer("hostelSettleRoommateBalancesList");
+}
+
+function renderRoommateBalancesToContainer(containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  const netBalances = calculateNetBalances();
+  container.innerHTML = "";
+
+  const meName = currentUser ? currentUser.name : "You";
+  const otherFriends = friends.filter(f => f !== meName);
+
+  if (otherFriends.length === 0) {
+    container.innerHTML = `
+      <div class="p-5 text-center bg-surface-container-low/70 rounded-xl border border-dashed border-outline-variant/30 text-on-surface-variant my-1">
+        <span class="material-symbols-outlined text-[28px] text-outline block mb-1">group_add</span>
+        <p class="font-headline-sm text-xs font-bold text-on-surface">No Roommates Added Yet</p>
+        <p class="font-body-sm text-[11px] text-on-surface-variant mt-0.5">Add your friends to start splitting room expenses!</p>
+      </div>
+    `;
+    return;
+  }
+
+  const bgColors = ["bg-surface-container-high text-primary", "bg-surface-container-high text-secondary", "bg-error-container text-on-error-container"];
+
+  let index = 0;
+  otherFriends.forEach(friend => {
+    const net = netBalances[friend] || 0;
+    const isOwedToYou = net >= 0;
+    const displayAmount = Math.abs(Math.round(net));
+    const initial = friend.charAt(0).toUpperCase();
+    const avatarColor = bgColors[index % bgColors.length];
+    index++;
+
+    container.innerHTML += `
+      <div class="flex items-center justify-between p-3 rounded-xl bg-surface-container-low hover:bg-surface-container transition-colors border border-outline-variant/15">
+        <div class="flex items-center gap-3 min-w-0">
+          <div class="w-9 h-9 rounded-full ${avatarColor} flex items-center justify-center font-bold font-headline-sm text-sm shrink-0">
+            ${initial}
+          </div>
+          <div class="flex flex-col min-w-0">
+            <div class="flex items-center gap-1.5">
+              <span class="font-headline-sm text-sm text-on-surface truncate font-semibold">${friend}</span>
+              <span class="font-label-sm text-[10px] text-on-surface-variant bg-surface-container px-1.5 py-0.2 rounded font-medium">Roommate 🤝</span>
+            </div>
+            <span class="font-label-sm text-xs text-on-surface-variant truncate">
+              ${net === 0 ? "Settled / No Dues" : isOwedToYou ? `Owes ₹${displayAmount}` : `Owes ₹${displayAmount}`}
+            </span>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2 shrink-0">
+          <span class="font-headline-sm text-sm md:text-base ${net === 0 ? 'text-on-surface-variant font-semibold' : isOwedToYou ? 'text-tertiary font-bold' : 'text-error font-bold'}">
+            ${net === 0 ? '₹0' : isOwedToYou ? `+₹${displayAmount}` : `-₹${displayAmount}`}
+          </span>
+          ${net !== 0 ? (isOwedToYou ? `
+            <button onclick="nudgeRoommate('${friend}', ${displayAmount}, 'Shared Expense')" class="px-2.5 py-1 rounded-lg bg-primary text-on-primary font-label-sm text-xs font-semibold shadow-2xs active:scale-95 transition-all flex items-center gap-1 hover:bg-secondary cursor-pointer">
+              <span class="material-symbols-outlined text-[13px]">send</span> Nudge
+            </button>
+          ` : `
+            <button onclick="openUPIModal('${friend}', ${displayAmount})" class="px-2.5 py-1 rounded-lg bg-error text-on-error font-label-sm text-xs font-semibold active:scale-95 transition-all flex items-center gap-1 hover:bg-error/90 cursor-pointer">
+              <span class="material-symbols-outlined text-[13px]">bolt</span> Pay UPI
+            </button>
+          `) : ''}
+        </div>
+      </div>
+    `;
+  });
+}
+
+function renderHostelActivityView() {
+  const container = document.getElementById("hostelActivityFullFeed");
+  if (!container) return;
+
+  container.innerHTML = "";
+  if (activityFeed.length === 0) {
+    container.innerHTML = `<p class="py-8 text-center text-xs text-on-surface-variant italic">No room activity logged yet.</p>`;
+    return;
+  }
+
+  activityFeed.forEach(item => {
+    container.innerHTML += `
+      <div class="py-3 flex items-center justify-between gap-3">
+        <div class="flex items-center gap-3 min-w-0">
+          <span class="text-2xl shrink-0">${item.icon}</span>
+          <span class="font-body-sm text-xs text-on-surface font-medium truncate">${item.text}</span>
+        </div>
+        <span class="font-label-sm text-[11px] text-on-surface-variant shrink-0">${item.time}</span>
+      </div>
+    `;
+  });
 }
 
 // ==================== COMMON STOCK INVENTORY ====================
 
 function renderFullStockView() {
+  const stockRoomSubtitle = document.getElementById("stockRoomSubtitle");
+  if (stockRoomSubtitle) {
+    stockRoomSubtitle.innerText = `Shared items for ${currentUser ? currentUser.room : "Room 204"}`;
+  }
+
   const container = document.getElementById("fullStockContainer");
   if (!container) return;
 
+  const searchInput = document.getElementById("hostelStockSearch");
+  const query = searchInput ? searchInput.value.toLowerCase().trim() : "";
+
+  let displayStock = stock;
+  if (query) {
+    displayStock = stock.filter(item => 
+      item.name.toLowerCase().includes(query) || 
+      item.purchasedBy.toLowerCase().includes(query)
+    );
+  }
+
   container.innerHTML = "";
-  if (stock.length === 0) {
+  if (displayStock.length === 0) {
     container.innerHTML = `
       <div class="col-span-full py-12 text-center bg-surface-container-low/50 rounded-2xl border border-dashed border-outline-variant/30 space-y-2">
         <span class="text-4xl block">🥛</span>
-        <h3 class="font-headline-sm text-base font-bold text-on-surface">No Shared Items Yet</h3>
+        <h3 class="font-headline-sm text-base font-bold text-on-surface">${query ? 'No matching stock items' : 'No Shared Items Yet'}</h3>
         <p class="font-body-sm text-xs text-on-surface-variant max-w-sm mx-auto">Add things your room shares like milk, Maggi, detergent and water.</p>
-        <button onclick="openAddStockModal()" class="mt-2 px-4 py-2 rounded-xl bg-primary text-on-primary font-label-md text-xs font-bold shadow-xs">
+        <button onclick="openAddStockModal()" class="mt-2 px-4 py-2 rounded-xl bg-primary text-on-primary font-label-md text-xs font-bold shadow-xs cursor-pointer">
           + Add Stock Item
         </button>
       </div>
@@ -464,7 +682,7 @@ function renderFullStockView() {
     return;
   }
 
-  stock.forEach(item => {
+  displayStock.forEach(item => {
     const isLow = item.quantity <= item.lowAlert;
     container.innerHTML += `
       <div class="rounded-2xl bg-surface-container-lowest p-5 shadow-sm border border-outline-variant/20 space-y-3.5 flex flex-col justify-between hover:border-primary/40 transition-all">
@@ -474,7 +692,7 @@ function renderFullStockView() {
               <span class="text-3xl">${item.icon}</span>
               <div>
                 <h3 class="font-headline-sm text-base font-bold text-on-surface">${item.name}</h3>
-                <span class="font-label-sm text-[11px] text-on-surface-variant">Bought by ${item.purchasedBy} · ₹${item.totalCost}</span>
+                <span class="font-label-sm text-[11px] text-on-surface-variant">Added by ${item.purchasedBy} · ₹${item.totalCost}</span>
               </div>
             </div>
             ${isLow ? `
@@ -495,13 +713,13 @@ function renderFullStockView() {
         </div>
 
         <div class="flex items-center gap-2 pt-1">
-          <button onclick="openUseStockModal(${item.id})" class="flex-1 py-2 rounded-xl bg-primary text-on-primary font-label-md text-xs font-bold active:scale-95 transition-all shadow-xs hover:bg-secondary">
+          <button onclick="openUseStockModal(${item.id})" class="flex-1 py-2 rounded-xl bg-primary text-on-primary font-label-md text-xs font-bold active:scale-95 transition-all shadow-xs hover:bg-secondary cursor-pointer">
             Use 1
           </button>
-          <button onclick="increaseStockQty(${item.id})" class="px-3 py-2 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface font-label-md text-xs font-semibold border border-outline-variant/30">
-            + Add Qty
+          <button onclick="increaseStockQty(${item.id})" class="px-3 py-2 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface font-label-md text-xs font-semibold border border-outline-variant/30 cursor-pointer">
+            + Qty
           </button>
-          <button onclick="deleteStockItem(${item.id})" class="p-2 rounded-xl text-outline hover:text-error hover:bg-error-container/40 transition-colors" title="Delete Item">
+          <button onclick="deleteStockItem(${item.id})" class="p-2 rounded-xl text-outline hover:text-error hover:bg-error-container/40 transition-colors cursor-pointer" title="Delete Item">
             <span class="material-symbols-outlined text-[18px]">delete</span>
           </button>
         </div>
@@ -806,6 +1024,37 @@ function handlePayFromWalletSubmit() {
 // ==================== 4. IOUs & BORROW FEATURE ====================
 
 function renderFullIOUsView() {
+  const meName = currentUser ? currentUser.name : "You";
+
+  let totalOwedToYou = 0;
+  let totalYouOwe = 0;
+  let countOwedToYou = 0;
+  let countYouOwe = 0;
+
+  ious.filter(i => i.status === "Pending").forEach(iou => {
+    const isYouDebtor = iou.person === meName;
+    const num = parseFloat((iou.itemOrAmount || "").replace(/[^0-9.]/g, ""));
+    if (!isYouDebtor) {
+      countOwedToYou++;
+      if (!isNaN(num)) totalOwedToYou += num;
+    } else {
+      countYouOwe++;
+      if (!isNaN(num)) totalYouOwe += num;
+    }
+  });
+
+  const iouOwedToYouSummary = document.getElementById("iouOwedToYouSummary");
+  if (iouOwedToYouSummary) iouOwedToYouSummary.innerText = `₹${totalOwedToYou.toLocaleString()}`;
+
+  const iouOwedToYouCount = document.getElementById("iouOwedToYouCount");
+  if (iouOwedToYouCount) iouOwedToYouCount.innerText = `${countOwedToYou} IOU${countOwedToYou === 1 ? '' : 's'}`;
+
+  const iouYouOweSummary = document.getElementById("iouYouOweSummary");
+  if (iouYouOweSummary) iouYouOweSummary.innerText = `₹${totalYouOwe.toLocaleString()}`;
+
+  const iouYouOweCount = document.getElementById("iouYouOweCount");
+  if (iouYouOweCount) iouYouOweCount.innerText = `${countYouOwe} IOU${countYouOwe === 1 ? '' : 's'}`;
+
   const container = document.getElementById("fullIOUsContainer");
   if (!container) return;
 
@@ -822,8 +1071,8 @@ function renderFullIOUsView() {
         <span class="text-4xl block">🎉</span>
         <h3 class="font-headline-sm text-base font-bold text-on-surface">All Clear</h3>
         <p class="font-body-sm text-xs text-on-surface-variant max-w-sm mx-auto">No pending IOUs or borrowed items right now.</p>
-        <button onclick="openAddIOUModal()" class="mt-2 px-4 py-2 rounded-xl bg-primary text-on-primary font-label-md text-xs font-bold shadow-xs">
-          + Record IOU
+        <button onclick="openAddIOUModal()" class="mt-2 px-4 py-2 rounded-xl bg-primary text-on-primary font-label-md text-xs font-bold shadow-xs cursor-pointer">
+          + Add IOU
         </button>
       </div>
     `;

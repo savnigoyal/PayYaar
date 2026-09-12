@@ -482,158 +482,257 @@
 
 
             <!-- ================= MAIN TAB 2: HOSTEL LAYER VIEW ================= -->
-            <section id="mainView-hostel" class="main-view hidden space-y-6">
-                <!-- Hostel Room Header Banner -->
-                <div class="rounded-2xl bg-surface-container-lowest p-6 shadow-sm border border-outline-variant/20 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div class="flex items-center gap-3.5">
-                        <div class="w-12 h-12 rounded-2xl bg-primary text-on-primary flex items-center justify-center text-2xl font-bold shadow-md shadow-primary/20">
-                            🏠
-                        </div>
-                        <div>
-                            <div class="flex items-center gap-2">
-                                <h1 class="font-headline-lg text-xl md:text-2xl text-on-surface font-extrabold" id="hostelRoomHeading">Hostel Room OS</h1>
-                                <span class="px-2.5 py-0.5 rounded-full bg-primary-container text-on-primary font-label-sm text-[10px] font-bold">SHARED LEDGER</span>
-                            </div>
-                            <p class="font-body-md text-xs text-on-surface-variant mt-0.5" id="hostelMembersSummary">Members: No roommates added yet</p>
-                        </div>
-                    </div>
-
-                    <!-- Room Metrics Bar -->
-                    <div class="flex items-center gap-3 border-t md:border-t-0 md:border-l border-outline-variant/20 pt-3 md:pt-0 md:pl-6">
-                        <div class="flex flex-col">
-                            <span class="font-label-sm text-[11px] text-on-surface-variant">Room Wallet</span>
-                            <span class="font-headline-sm text-base font-bold text-tertiary" id="hostelWalletSummary">₹0</span>
-                        </div>
-                        <div class="w-px h-8 bg-outline-variant/30"></div>
-                        <div class="flex flex-col">
-                            <span class="font-label-sm text-[11px] text-on-surface-variant">Pending IOUs</span>
-                            <span class="font-headline-sm text-base font-bold text-primary" id="hostelIOUSummary">0 Items</span>
-                        </div>
-                        <div class="w-px h-8 bg-outline-variant/30"></div>
-                        <button onclick="openAddFriendModal()" class="px-3 py-1.5 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface font-label-md text-xs font-semibold border border-outline-variant/30 transition-colors">
-                            + Member
-                        </button>
-                    </div>
-                </div>
-
-                <!-- HOSTEL SUB-NAVIGATION TAB BAR -->
-                <div class="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar border-b border-outline-variant/20" id="hostelSubNav">
-                    <button onclick="switchHostelSubTab('overview')" id="subTabNav-overview" class="sub-tab-btn active px-4 py-2 rounded-xl text-xs font-bold bg-primary text-on-primary shadow-2xs transition-all flex items-center gap-1.5">
-                        <span class="material-symbols-outlined text-[16px]">grid_view</span> Overview
-                    </button>
-                    <button onclick="switchHostelSubTab('stock')" id="subTabNav-stock" class="sub-tab-btn px-4 py-2 rounded-xl text-xs font-medium bg-surface-container text-on-surface-variant hover:bg-surface-container-high transition-all flex items-center gap-1.5">
-                        <span class="material-symbols-outlined text-[16px]">inventory_2</span> Common Stock
-                    </button>
-                    <button onclick="switchHostelSubTab('wallet')" id="subTabNav-wallet" class="sub-tab-btn px-4 py-2 rounded-xl text-xs font-medium bg-surface-container text-on-surface-variant hover:bg-surface-container-high transition-all flex items-center gap-1.5">
-                        <span class="material-symbols-outlined text-[16px]">account_balance_wallet</span> Room Wallet
-                    </button>
-                    <button onclick="switchHostelSubTab('ious')" id="subTabNav-ious" class="sub-tab-btn px-4 py-2 rounded-xl text-xs font-medium bg-surface-container text-on-surface-variant hover:bg-surface-container-high transition-all flex items-center gap-1.5">
-                        <span class="material-symbols-outlined text-[16px]">handshake</span> IOUs & Borrow
-                    </button>
-                    <button onclick="switchHostelSubTab('bills')" id="subTabNav-bills" class="sub-tab-btn px-4 py-2 rounded-xl text-xs font-medium bg-surface-container text-on-surface-variant hover:bg-surface-container-high transition-all flex items-center gap-1.5">
-                        <span class="material-symbols-outlined text-[16px]">calendar_month</span> Recurring Bills
-                    </button>
-                    <button onclick="switchHostelSubTab('stats')" id="subTabNav-stats" class="sub-tab-btn px-4 py-2 rounded-xl text-xs font-medium bg-surface-container text-on-surface-variant hover:bg-surface-container-high transition-all flex items-center gap-1.5">
-                        <span class="material-symbols-outlined text-[16px]">leaderboard</span> Room Stats
-                    </button>
-                </div>
-
-                <!-- SUB-VIEW 1: OVERVIEW -->
+            <section id="mainView-hostel" class="main-view hidden space-y-6 max-w-5xl mx-auto w-full">
+                
+                <!-- SUB-VIEW 1: OVERVIEW HUB (The Clean Home Screen for Hostel) -->
                 <div id="hostelSubView-overview" class="hostel-subview space-y-6">
-                    <!-- Quick Actions Bar -->
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                        <button onclick="openAddExpenseModal()" class="p-4 rounded-2xl bg-surface-container-lowest border border-outline-variant/20 hover:border-primary transition-all text-left space-y-2 shadow-xs group">
-                            <div class="w-10 h-10 rounded-xl bg-primary-container/20 text-primary flex items-center justify-center group-hover:scale-110 transition-transform">
-                                <span class="material-symbols-outlined text-[22px]">post_add</span>
+                    <!-- Room Banner Header -->
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2">
+                        <div>
+                            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface-container text-on-surface-variant border border-outline-variant/20 text-xs font-semibold">
+                                <span id="hubRoomHeading">🏠 Block B · Room 204</span>
+                                <span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>
+                                <span id="hubMembersSummary">4 Members</span>
                             </div>
-                            <div>
-                                <h3 class="font-headline-sm text-sm font-bold text-on-surface">Add Expense</h3>
-                                <p class="font-label-sm text-[11px] text-on-surface-variant">Instant room split</p>
-                            </div>
-                        </button>
+                            <h1 class="font-headline-lg text-2xl md:text-3xl text-on-surface font-extrabold tracking-tight mt-2">My Hostel</h1>
+                            <p class="font-body-md text-xs md:text-sm text-on-surface-variant">Manage your room expenses, shared items and money.</p>
+                        </div>
                         
-                        <button onclick="openAddStockModal()" class="p-4 rounded-2xl bg-surface-container-lowest border border-outline-variant/20 hover:border-primary transition-all text-left space-y-2 shadow-xs group">
-                            <div class="w-10 h-10 rounded-xl bg-tertiary-fixed/30 text-tertiary flex items-center justify-center group-hover:scale-110 transition-transform">
-                                <span class="material-symbols-outlined text-[22px]">add_shopping_cart</span>
+                        <div class="flex items-center gap-2 shrink-0">
+                            <button onclick="openAddFriendModal()" class="px-3.5 py-2 rounded-xl bg-surface-container-lowest hover:bg-surface-container text-on-surface font-label-md text-xs font-semibold border border-outline-variant/30 transition-all flex items-center gap-1.5 shadow-2xs">
+                                <span class="material-symbols-outlined text-[16px] text-primary">group_add</span> + Member
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Compact Financial Summary Bar -->
+                    <div class="grid grid-cols-3 gap-3 p-4 md:p-5 rounded-2xl bg-primary text-on-primary shadow-lg shadow-primary/15 relative overflow-hidden">
+                        <div class="absolute -right-6 -bottom-6 w-32 h-32 rounded-full bg-primary-container/30 blur-xl pointer-events-none"></div>
+                        
+                        <!-- You're Owed / Owe Metric -->
+                        <div class="flex flex-col space-y-0.5 relative z-10">
+                            <span class="font-label-sm text-[11px] md:text-xs text-primary-fixed uppercase tracking-wider font-semibold" id="hubOwedLabel">You're owed</span>
+                            <span class="font-headline-sm text-lg md:text-2xl font-extrabold text-on-primary" id="hubOwedAmount">₹0</span>
+                            <span class="font-label-sm text-[10px] text-tertiary-fixed font-medium truncate" id="hubOwedSubtitle">Net roommate status</span>
+                        </div>
+
+                        <!-- Room Wallet Metric -->
+                        <div class="flex flex-col space-y-0.5 border-l border-primary-container/40 pl-3 md:pl-4 relative z-10">
+                            <span class="font-label-sm text-[11px] md:text-xs text-primary-fixed uppercase tracking-wider font-semibold">Room Wallet</span>
+                            <span class="font-headline-sm text-lg md:text-2xl font-extrabold text-on-primary" id="hubWalletBalance">₹0</span>
+                            <span class="font-label-sm text-[10px] text-primary-fixed font-medium truncate">Shared room fund</span>
+                        </div>
+
+                        <!-- Active IOUs Metric -->
+                        <div class="flex flex-col space-y-0.5 border-l border-primary-container/40 pl-3 md:pl-4 relative z-10">
+                            <span class="font-label-sm text-[11px] md:text-xs text-primary-fixed uppercase tracking-wider font-semibold">Active IOUs</span>
+                            <span class="font-headline-sm text-lg md:text-2xl font-extrabold text-on-primary" id="hubActiveIOUsCount">0</span>
+                            <span class="font-label-sm text-[10px] text-primary-fixed font-medium truncate">Money & items</span>
+                        </div>
+                    </div>
+
+                    <!-- 6 Main Feature Navigation Cards Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <!-- 1. Expenses Card -->
+                        <button onclick="navigateTo('#hostel/expenses')" class="p-5 rounded-2xl bg-surface-container-lowest border border-outline-variant/20 hover:border-primary hover:shadow-md transition-all text-left space-y-3 group flex flex-col justify-between cursor-pointer">
+                            <div class="flex items-start justify-between w-full">
+                                <div class="w-11 h-11 rounded-2xl bg-primary-container/20 text-primary flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
+                                    💰
+                                </div>
+                                <span class="material-symbols-outlined text-outline group-hover:text-primary group-hover:translate-x-1 transition-all">arrow_forward</span>
                             </div>
                             <div>
-                                <h3 class="font-headline-sm text-sm font-bold text-on-surface">Add Stock</h3>
-                                <p class="font-label-sm text-[11px] text-on-surface-variant">Shared supplies</p>
+                                <h3 class="font-headline-sm text-base font-bold text-on-surface group-hover:text-primary transition-colors">Expenses</h3>
+                                <p class="font-body-sm text-xs text-on-surface-variant mt-0.5">Track and split room expenses</p>
+                            </div>
+                            <div class="pt-2 border-t border-outline-variant/15 flex items-center justify-between font-label-sm text-xs">
+                                <span class="font-semibold text-primary" id="hubNavExpensesSummary">₹0 this month</span>
+                                <span class="text-on-surface-variant group-hover:text-primary font-medium">View all →</span>
                             </div>
                         </button>
 
-                        <button onclick="openAddIOUModal()" class="p-4 rounded-2xl bg-surface-container-lowest border border-outline-variant/20 hover:border-primary transition-all text-left space-y-2 shadow-xs group">
-                            <div class="w-10 h-10 rounded-xl bg-secondary-container/20 text-secondary flex items-center justify-center group-hover:scale-110 transition-transform">
-                                <span class="material-symbols-outlined text-[22px]">handshake</span>
+                        <!-- 2. Common Stock Card -->
+                        <button onclick="navigateTo('#hostel/stock')" class="p-5 rounded-2xl bg-surface-container-lowest border border-outline-variant/20 hover:border-primary hover:shadow-md transition-all text-left space-y-3 group flex flex-col justify-between cursor-pointer">
+                            <div class="flex items-start justify-between w-full">
+                                <div class="w-11 h-11 rounded-2xl bg-tertiary-fixed/30 text-tertiary flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
+                                    📦
+                                </div>
+                                <span class="material-symbols-outlined text-outline group-hover:text-primary group-hover:translate-x-1 transition-all">arrow_forward</span>
                             </div>
                             <div>
-                                <h3 class="font-headline-sm text-sm font-bold text-on-surface">Record IOU</h3>
-                                <p class="font-label-sm text-[11px] text-on-surface-variant">Items, food or cash</p>
+                                <h3 class="font-headline-sm text-base font-bold text-on-surface group-hover:text-primary transition-colors">Common Stock</h3>
+                                <p class="font-body-sm text-xs text-on-surface-variant mt-0.5">Milk, Maggi, detergent and shared items</p>
+                            </div>
+                            <div class="pt-2 border-t border-outline-variant/15 flex items-center justify-between font-label-sm text-xs">
+                                <span class="font-semibold text-tertiary" id="hubNavStockSummary">0 items</span>
+                                <span class="text-on-surface-variant group-hover:text-primary font-medium">Manage stock →</span>
                             </div>
                         </button>
 
-                        <button onclick="openAddWalletContributionModal()" class="p-4 rounded-2xl bg-surface-container-lowest border border-outline-variant/20 hover:border-primary transition-all text-left space-y-2 shadow-xs group">
-                            <div class="w-10 h-10 rounded-xl bg-primary-container/20 text-primary flex items-center justify-center group-hover:scale-110 transition-transform">
-                                <span class="material-symbols-outlined text-[22px]">account_balance_wallet</span>
+                        <!-- 3. IOUs Card -->
+                        <button onclick="navigateTo('#hostel/ious')" class="p-5 rounded-2xl bg-surface-container-lowest border border-outline-variant/20 hover:border-primary hover:shadow-md transition-all text-left space-y-3 group flex flex-col justify-between cursor-pointer">
+                            <div class="flex items-start justify-between w-full">
+                                <div class="w-11 h-11 rounded-2xl bg-secondary-container/20 text-secondary flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
+                                    🤝
+                                </div>
+                                <span class="material-symbols-outlined text-outline group-hover:text-primary group-hover:translate-x-1 transition-all">arrow_forward</span>
                             </div>
                             <div>
-                                <h3 class="font-headline-sm text-sm font-bold text-on-surface">Room Wallet</h3>
-                                <p class="font-label-sm text-[11px] text-on-surface-variant">Contribute pool fund</p>
+                                <h3 class="font-headline-sm text-base font-bold text-on-surface group-hover:text-primary transition-colors">IOUs</h3>
+                                <p class="font-body-sm text-xs text-on-surface-variant mt-0.5">Money and items borrowed</p>
+                            </div>
+                            <div class="pt-2 border-t border-outline-variant/15 flex items-center justify-between font-label-sm text-xs">
+                                <span class="font-semibold text-secondary" id="hubNavIOUsSummary">0 active</span>
+                                <span class="text-on-surface-variant group-hover:text-primary font-medium">Track IOUs →</span>
+                            </div>
+                        </button>
+
+                        <!-- 4. Room Wallet Card -->
+                        <button onclick="navigateTo('#hostel/wallet')" class="p-5 rounded-2xl bg-surface-container-lowest border border-outline-variant/20 hover:border-primary hover:shadow-md transition-all text-left space-y-3 group flex flex-col justify-between cursor-pointer">
+                            <div class="flex items-start justify-between w-full">
+                                <div class="w-11 h-11 rounded-2xl bg-tertiary-container/20 text-tertiary flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
+                                    👛
+                                </div>
+                                <span class="material-symbols-outlined text-outline group-hover:text-primary group-hover:translate-x-1 transition-all">arrow_forward</span>
+                            </div>
+                            <div>
+                                <h3 class="font-headline-sm text-base font-bold text-on-surface group-hover:text-primary transition-colors">Room Wallet</h3>
+                                <p class="font-body-sm text-xs text-on-surface-variant mt-0.5">Shared room fund</p>
+                            </div>
+                            <div class="pt-2 border-t border-outline-variant/15 flex items-center justify-between font-label-sm text-xs">
+                                <span class="font-semibold text-tertiary" id="hubNavWalletSummary">₹0 available</span>
+                                <span class="text-on-surface-variant group-hover:text-primary font-medium">Open wallet →</span>
+                            </div>
+                        </button>
+
+                        <!-- 5. Settle Up Card -->
+                        <button onclick="navigateTo('#hostel/settle')" class="p-5 rounded-2xl bg-surface-container-lowest border border-outline-variant/20 hover:border-primary hover:shadow-md transition-all text-left space-y-3 group flex flex-col justify-between cursor-pointer">
+                            <div class="flex items-start justify-between w-full">
+                                <div class="w-11 h-11 rounded-2xl bg-error-container/40 text-error flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
+                                    💸
+                                </div>
+                                <span class="material-symbols-outlined text-outline group-hover:text-primary group-hover:translate-x-1 transition-all">arrow_forward</span>
+                            </div>
+                            <div>
+                                <h3 class="font-headline-sm text-base font-bold text-on-surface group-hover:text-primary transition-colors">Settle Up</h3>
+                                <p class="font-body-sm text-xs text-on-surface-variant mt-0.5">Settle roommate balances</p>
+                            </div>
+                            <div class="pt-2 border-t border-outline-variant/15 flex items-center justify-between font-label-sm text-xs">
+                                <span class="font-semibold text-error" id="hubNavSettleSummary">0 payments recommended</span>
+                                <span class="text-on-surface-variant group-hover:text-primary font-medium">Settle dues →</span>
+                            </div>
+                        </button>
+
+                        <!-- 6. Activity Card -->
+                        <button onclick="navigateTo('#hostel/activity')" class="p-5 rounded-2xl bg-surface-container-lowest border border-outline-variant/20 hover:border-primary hover:shadow-md transition-all text-left space-y-3 group flex flex-col justify-between cursor-pointer">
+                            <div class="flex items-start justify-between w-full">
+                                <div class="w-11 h-11 rounded-2xl bg-primary-container/20 text-primary flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
+                                    📊
+                                </div>
+                                <span class="material-symbols-outlined text-outline group-hover:text-primary group-hover:translate-x-1 transition-all">arrow_forward</span>
+                            </div>
+                            <div>
+                                <h3 class="font-headline-sm text-base font-bold text-on-surface group-hover:text-primary transition-colors">Activity</h3>
+                                <p class="font-body-sm text-xs text-on-surface-variant mt-0.5">See what happened in your room</p>
+                            </div>
+                            <div class="pt-2 border-t border-outline-variant/15 flex items-center justify-between font-label-sm text-xs">
+                                <span class="font-semibold text-primary" id="hubNavActivitySummary">Real-time room log</span>
+                                <span class="text-on-surface-variant group-hover:text-primary font-medium">View log →</span>
                             </div>
                         </button>
                     </div>
 
-                    <!-- Room Summary Dashboard Cards -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <!-- Common Stock Quick Access -->
-                        <div class="rounded-2xl bg-surface-container-lowest p-5 shadow-sm space-y-3 border border-outline-variant/20">
-                            <div class="flex items-center justify-between">
-                                <h3 class="font-headline-sm text-base font-bold text-on-surface flex items-center gap-2">
-                                    <span>🥛</span> Common Stock
-                                </h3>
-                                <button onclick="switchHostelSubTab('stock')" class="font-label-sm text-xs text-primary font-semibold hover:underline">Manage Stock</button>
-                            </div>
-                            <div class="space-y-2" id="overviewStockList">
-                                <!-- Populated via JS -->
-                            </div>
-                        </div>
-
-                        <!-- Room Wallet Quick Access -->
-                        <div class="rounded-2xl bg-surface-container-lowest p-5 shadow-sm space-y-3 border border-outline-variant/20">
-                            <div class="flex items-center justify-between">
-                                <h3 class="font-headline-sm text-base font-bold text-on-surface flex items-center gap-2">
-                                    <span>💳</span> Room Wallet
-                                </h3>
-                                <button onclick="switchHostelSubTab('wallet')" class="font-label-sm text-xs text-primary font-semibold hover:underline">Full Fund</button>
-                            </div>
-                            <div class="p-4 rounded-xl bg-surface-container-low space-y-3">
-                                <div class="flex items-center justify-between">
-                                    <span class="font-label-sm text-xs text-on-surface-variant">Common Pool Balance</span>
-                                    <span class="font-headline-sm text-xl font-bold text-tertiary" id="overviewWalletBalance">₹0</span>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <button onclick="openAddWalletContributionModal()" class="flex-1 py-2 rounded-lg bg-tertiary text-on-tertiary font-label-md text-xs font-bold hover:bg-tertiary-container transition-colors">
-                                        + Add Money
-                                    </button>
-                                    <button onclick="openPayFromWalletModal()" class="flex-1 py-2 rounded-lg bg-surface-container text-on-surface font-label-md text-xs font-semibold border border-outline-variant/30 hover:bg-surface-container-high transition-colors">
-                                        Pay From Wallet
-                                    </button>
-                                </div>
-                            </div>
+                    <!-- Quick Actions Row at Bottom -->
+                    <div class="rounded-2xl bg-surface-container-lowest p-4 border border-outline-variant/20 flex flex-wrap items-center justify-between gap-3 shadow-xs">
+                        <span class="font-headline-sm text-xs font-bold text-on-surface flex items-center gap-1.5">
+                            <span class="material-symbols-outlined text-[16px] text-primary">bolt</span> Quick Room Actions:
+                        </span>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <button onclick="openAddExpenseModal()" class="px-3 py-1.5 rounded-xl bg-primary text-on-primary font-label-sm text-xs font-bold shadow-2xs hover:bg-secondary transition-all flex items-center gap-1">
+                                <span class="material-symbols-outlined text-[15px]">add</span> + Expense
+                            </button>
+                            <button onclick="openAddStockModal()" class="px-3 py-1.5 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface font-label-sm text-xs font-semibold border border-outline-variant/30 transition-all flex items-center gap-1">
+                                <span class="material-symbols-outlined text-[15px]">add_shopping_cart</span> + Stock
+                            </button>
+                            <button onclick="openAddIOUModal()" class="px-3 py-1.5 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface font-label-sm text-xs font-semibold border border-outline-variant/30 transition-all flex items-center gap-1">
+                                <span class="material-symbols-outlined text-[15px]">handshake</span> + IOU
+                            </button>
+                            <button onclick="openAddWalletContributionModal()" class="px-3 py-1.5 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface font-label-sm text-xs font-semibold border border-outline-variant/30 transition-all flex items-center gap-1">
+                                <span class="material-symbols-outlined text-[15px]">account_balance_wallet</span> + Wallet
+                            </button>
                         </div>
                     </div>
                 </div>
 
-                <!-- SUB-VIEW 2: COMMON STOCK -->
-                <div id="hostelSubView-stock" class="hostel-subview hidden space-y-6">
-                    <div class="flex flex-wrap items-center justify-between gap-3">
-                        <div>
-                            <h2 class="font-headline-sm text-lg md:text-xl font-bold text-on-surface">Common Stock / Shared Inventory</h2>
-                            <p class="font-body-md text-xs text-on-surface-variant">Track shared room supplies like milk, Maggi, detergent & water.</p>
+                <!-- SUB-VIEW 2: DEDICATED ROOM EXPENSES PAGE -->
+                <div id="hostelSubView-expenses" class="hostel-subview hidden space-y-6">
+                    <!-- Header with Back Button -->
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-outline-variant/20">
+                        <div class="flex items-center gap-3">
+                            <button onclick="navigateTo('#hostel')" class="w-10 h-10 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface flex items-center justify-center border border-outline-variant/30 transition-all shadow-2xs shrink-0 cursor-pointer" title="Back to Hostel">
+                                <span class="material-symbols-outlined text-[20px]">arrow_back</span>
+                            </button>
+                            <div>
+                                <h2 class="font-headline-lg text-xl md:text-2xl font-extrabold text-on-surface flex items-center gap-2">
+                                    <span>💰</span> Room Expenses
+                                </h2>
+                                <p class="font-body-md text-xs text-on-surface-variant">Shared expenses split among roommates</p>
+                            </div>
                         </div>
-                        <button onclick="openAddStockModal()" class="px-4 py-2 rounded-xl bg-primary text-on-primary font-label-md text-xs font-bold shadow-sm hover:bg-secondary transition-all flex items-center gap-1.5">
-                            <span class="material-symbols-outlined text-[18px]">add</span> Add Stock Item
+
+                        <button onclick="openAddExpenseModal()" class="px-4 py-2.5 rounded-xl bg-primary text-on-primary font-label-md text-xs font-bold shadow-md hover:bg-secondary transition-all flex items-center gap-1.5 shrink-0 cursor-pointer">
+                            <span class="material-symbols-outlined text-[18px]">add</span> Add Expense
                         </button>
+                    </div>
+
+                    <!-- Expense Monthly Summary Banner -->
+                    <div class="rounded-2xl bg-surface-container-lowest p-5 shadow-xs border border-outline-variant/20 flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-12 h-12 rounded-2xl bg-primary-container/20 text-primary flex items-center justify-center text-2xl font-bold">
+                                🧾
+                            </div>
+                            <div>
+                                <span class="font-label-sm text-xs text-on-surface-variant font-medium">Total Spent This Month</span>
+                                <h3 class="font-headline-sm text-2xl font-extrabold text-on-surface" id="hostelExpensesTotalMonth">₹0</h3>
+                            </div>
+                        </div>
+                        <span class="px-3 py-1 rounded-full bg-primary-container text-on-primary font-label-sm text-xs font-bold" id="hostelExpensesCountBadge">0 Expenses</span>
+                    </div>
+
+                    <!-- Expenses Transaction List -->
+                    <div class="rounded-2xl bg-surface-container-lowest p-5 shadow-xs border border-outline-variant/20 space-y-4">
+                        <h3 class="font-headline-sm text-base font-bold text-on-surface">Room Expense History</h3>
+                        <div class="divide-y divide-surface-container" id="hostelExpensesDedicatedList">
+                            <!-- Populated via JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SUB-VIEW 3: DEDICATED COMMON STOCK PAGE -->
+                <div id="hostelSubView-stock" class="hostel-subview hidden space-y-6">
+                    <!-- Header with Back Button -->
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-outline-variant/20">
+                        <div class="flex items-center gap-3">
+                            <button onclick="navigateTo('#hostel')" class="w-10 h-10 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface flex items-center justify-center border border-outline-variant/30 transition-all shadow-2xs shrink-0 cursor-pointer" title="Back to Hostel">
+                                <span class="material-symbols-outlined text-[20px]">arrow_back</span>
+                            </button>
+                            <div>
+                                <h2 class="font-headline-lg text-xl md:text-2xl font-extrabold text-on-surface flex items-center gap-2">
+                                    <span>📦</span> Common Stock
+                                </h2>
+                                <p class="font-body-md text-xs text-on-surface-variant" id="stockRoomSubtitle">Shared items for Room 204</p>
+                            </div>
+                        </div>
+
+                        <button onclick="openAddStockModal()" class="px-4 py-2.5 rounded-xl bg-primary text-on-primary font-label-md text-xs font-bold shadow-md hover:bg-secondary transition-all flex items-center gap-1.5 shrink-0 cursor-pointer">
+                            <span class="material-symbols-outlined text-[18px]">add</span> Add Stock
+                        </button>
+                    </div>
+
+                    <!-- Stock Search Bar -->
+                    <div class="flex items-center rounded-2xl bg-surface-container-lowest px-4 py-3 border border-outline-variant/20 shadow-xs focus-within:border-primary transition-all">
+                        <span class="material-symbols-outlined text-outline text-[20px] mr-3">search</span>
+                        <input type="text" id="hostelStockSearch" oninput="renderFullStockView()" placeholder="Search stock..." class="bg-transparent w-full text-on-surface font-body-md text-sm focus:outline-none placeholder:text-outline">
                     </div>
 
                     <!-- Stock Inventory Grid -->
@@ -642,8 +741,87 @@
                     </div>
                 </div>
 
-                <!-- SUB-VIEW 3: ROOM WALLET -->
+                <!-- SUB-VIEW 4: DEDICATED IOUs PAGE -->
+                <div id="hostelSubView-ious" class="hostel-subview hidden space-y-6">
+                    <!-- Header with Back Button -->
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-outline-variant/20">
+                        <div class="flex items-center gap-3">
+                            <button onclick="navigateTo('#hostel')" class="w-10 h-10 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface flex items-center justify-center border border-outline-variant/30 transition-all shadow-2xs shrink-0 cursor-pointer" title="Back to Hostel">
+                                <span class="material-symbols-outlined text-[20px]">arrow_back</span>
+                            </button>
+                            <div>
+                                <h2 class="font-headline-lg text-xl md:text-2xl font-extrabold text-on-surface flex items-center gap-2">
+                                    <span>🤝</span> IOUs
+                                </h2>
+                                <p class="font-body-md text-xs text-on-surface-variant">Track money, chargers, food & items borrowed</p>
+                            </div>
+                        </div>
+
+                        <button onclick="openAddIOUModal()" class="px-4 py-2.5 rounded-xl bg-primary text-on-primary font-label-md text-xs font-bold shadow-md hover:bg-secondary transition-all flex items-center gap-1.5 shrink-0 cursor-pointer">
+                            <span class="material-symbols-outlined text-[18px]">add</span> Add IOU
+                        </button>
+                    </div>
+
+                    <!-- IOU Summary Cards (You are owed / You owe) -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="rounded-2xl bg-tertiary-fixed/20 p-4 border border-tertiary-fixed/40 flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl bg-tertiary text-on-tertiary flex items-center justify-center font-bold text-lg">
+                                    ↓
+                                </div>
+                                <div>
+                                    <span class="font-label-sm text-xs text-on-surface-variant font-medium">You are owed</span>
+                                    <h3 class="font-headline-sm text-xl font-extrabold text-tertiary" id="iouOwedToYouSummary">₹0</h3>
+                                </div>
+                            </div>
+                            <span class="font-label-sm text-xs font-bold text-tertiary" id="iouOwedToYouCount">0 IOUs</span>
+                        </div>
+
+                        <div class="rounded-2xl bg-error-container/30 p-4 border border-error-container flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl bg-error text-on-error flex items-center justify-center font-bold text-lg">
+                                    ↑
+                                </div>
+                                <div>
+                                    <span class="font-label-sm text-xs text-on-surface-variant font-medium">You owe</span>
+                                    <h3 class="font-headline-sm text-xl font-extrabold text-error" id="iouYouOweSummary">₹0</h3>
+                                </div>
+                            </div>
+                            <span class="font-label-sm text-xs font-bold text-error" id="iouYouOweCount">0 IOUs</span>
+                        </div>
+                    </div>
+
+                    <!-- IOU Category Filters -->
+                    <div class="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar" id="iouFilterContainer">
+                        <button onclick="filterIOUs('All', this)" class="px-3.5 py-1.5 rounded-full bg-primary text-on-primary font-label-sm text-xs font-semibold shadow-2xs cursor-pointer">All</button>
+                        <button onclick="filterIOUs('Money', this)" class="px-3.5 py-1.5 rounded-full bg-surface-container text-on-surface-variant font-label-sm text-xs font-medium hover:bg-surface-container-high transition-colors cursor-pointer">💵 Money</button>
+                        <button onclick="filterIOUs('Item', this)" class="px-3.5 py-1.5 rounded-full bg-surface-container text-on-surface-variant font-label-sm text-xs font-medium hover:bg-surface-container-high transition-colors cursor-pointer">🔌 Items / Electronics</button>
+                        <button onclick="filterIOUs('Food', this)" class="px-3.5 py-1.5 rounded-full bg-surface-container text-on-surface-variant font-label-sm text-xs font-medium hover:bg-surface-container-high transition-colors cursor-pointer">🍜 Food & Snacks</button>
+                    </div>
+
+                    <div class="space-y-3">
+                        <h3 class="font-headline-sm text-base font-bold text-on-surface uppercase tracking-wider text-xs">Active IOUs</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="fullIOUsContainer">
+                            <!-- Populated via JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SUB-VIEW 5: DEDICATED ROOM WALLET PAGE -->
                 <div id="hostelSubView-wallet" class="hostel-subview hidden space-y-6">
+                    <!-- Header with Back Button -->
+                    <div class="flex items-center gap-3 pb-2 border-b border-outline-variant/20">
+                        <button onclick="navigateTo('#hostel')" class="w-10 h-10 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface flex items-center justify-center border border-outline-variant/30 transition-all shadow-2xs shrink-0 cursor-pointer" title="Back to Hostel">
+                            <span class="material-symbols-outlined text-[20px]">arrow_back</span>
+                        </button>
+                        <div>
+                            <h2 class="font-headline-lg text-xl md:text-2xl font-extrabold text-on-surface flex items-center gap-2">
+                                <span>👛</span> Room Wallet
+                            </h2>
+                            <p class="font-body-md text-xs text-on-surface-variant">Shared room fund for common purchases</p>
+                        </div>
+                    </div>
+
                     <!-- Wallet Hero Banner -->
                     <div class="rounded-2xl bg-tertiary text-on-tertiary p-6 shadow-xl shadow-tertiary/20 space-y-4">
                         <div class="flex items-center justify-between">
@@ -658,14 +836,14 @@
 
                         <div class="flex items-baseline gap-2">
                             <span class="font-currency-display text-4xl md:text-5xl font-extrabold" id="fullWalletBalance">₹0</span>
-                            <span class="font-body-sm text-tertiary-fixed">available balance</span>
+                            <span class="font-body-sm text-tertiary-fixed">Available balance</span>
                         </div>
 
                         <div class="flex items-center gap-3 pt-2">
-                            <button onclick="openAddWalletContributionModal()" class="flex-1 h-11 rounded-xl bg-surface-container-lowest text-tertiary font-headline-sm text-xs font-bold shadow-sm active:scale-95 hover:bg-surface-container-low transition-all flex items-center justify-center gap-1.5">
-                                <span class="material-symbols-outlined text-[18px]">add_circle</span> Add Money
+                            <button onclick="openAddWalletContributionModal()" class="flex-1 h-11 rounded-xl bg-surface-container-lowest text-tertiary font-headline-sm text-xs font-bold shadow-sm active:scale-95 hover:bg-surface-container-low transition-all flex items-center justify-center gap-1.5 cursor-pointer">
+                                <span class="material-symbols-outlined text-[18px]">add_circle</span> + Add Money
                             </button>
-                            <button onclick="openPayFromWalletModal()" class="flex-1 h-11 rounded-xl bg-tertiary-container text-on-tertiary font-headline-sm text-xs font-semibold shadow-sm active:scale-95 hover:bg-tertiary/80 transition-all flex items-center justify-center gap-1.5">
+                            <button onclick="openPayFromWalletModal()" class="flex-1 h-11 rounded-xl bg-tertiary-container text-on-tertiary font-headline-sm text-xs font-semibold shadow-sm active:scale-95 hover:bg-tertiary/80 transition-all flex items-center justify-center gap-1.5 cursor-pointer">
                                 <span class="material-symbols-outlined text-[18px]">payments</span> Pay From Wallet
                             </button>
                         </div>
@@ -683,7 +861,7 @@
 
                         <!-- Wallet Expense History -->
                         <div class="lg:col-span-7 rounded-2xl bg-surface-container-lowest p-5 shadow-sm space-y-4 border border-outline-variant/20">
-                            <h3 class="font-headline-sm text-base font-bold text-on-surface">Wallet Activity Ledger</h3>
+                            <h3 class="font-headline-sm text-base font-bold text-on-surface">Recent Activity</h3>
                             <div class="divide-y divide-surface-container" id="walletActivityList">
                                 <!-- Populated via JS -->
                             </div>
@@ -691,40 +869,93 @@
                     </div>
                 </div>
 
-                <!-- SUB-VIEW 4: IOUs & BORROW -->
-                <div id="hostelSubView-ious" class="hostel-subview hidden space-y-6">
-                    <div class="flex flex-wrap items-center justify-between gap-3">
-                        <div>
-                            <h2 class="font-headline-sm text-lg md:text-xl font-bold text-on-surface">IOUs & Borrow Tracker</h2>
-                            <p class="font-body-md text-xs text-on-surface-variant">Track money, chargers, food & items you owe or are owed.</p>
-                        </div>
-                        <button onclick="openAddIOUModal()" class="px-4 py-2 rounded-xl bg-primary text-on-primary font-label-md text-xs font-bold shadow-sm hover:bg-secondary transition-all flex items-center gap-1.5">
-                            <span class="material-symbols-outlined text-[18px]">add</span> Record IOU
+                <!-- SUB-VIEW 6: DEDICATED SETTLEMENT PAGE -->
+                <div id="hostelSubView-settle" class="hostel-subview hidden space-y-6">
+                    <!-- Header with Back Button -->
+                    <div class="flex items-center gap-3 pb-2 border-b border-outline-variant/20">
+                        <button onclick="navigateTo('#hostel')" class="w-10 h-10 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface flex items-center justify-center border border-outline-variant/30 transition-all shadow-2xs shrink-0 cursor-pointer" title="Back to Hostel">
+                            <span class="material-symbols-outlined text-[20px]">arrow_back</span>
                         </button>
+                        <div>
+                            <h2 class="font-headline-lg text-xl md:text-2xl font-extrabold text-on-surface flex items-center gap-2">
+                                <span>💸</span> Settle Up
+                            </h2>
+                            <p class="font-body-md text-xs text-on-surface-variant" id="settleUpSubtitle">Zero awkwardness · Settle roommate balances</p>
+                        </div>
                     </div>
 
-                    <!-- IOU Category Filters -->
-                    <div class="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar" id="iouFilterContainer">
-                        <button onclick="filterIOUs('All', this)" class="px-3.5 py-1.5 rounded-full bg-primary text-on-primary font-label-sm text-xs font-semibold shadow-2xs">All</button>
-                        <button onclick="filterIOUs('Money', this)" class="px-3.5 py-1.5 rounded-full bg-surface-container text-on-surface-variant font-label-sm text-xs font-medium hover:bg-surface-container-high transition-colors">💵 Money</button>
-                        <button onclick="filterIOUs('Item', this)" class="px-3.5 py-1.5 rounded-full bg-surface-container text-on-surface-variant font-label-sm text-xs font-medium hover:bg-surface-container-high transition-colors">🔌 Items / Electronics</button>
-                        <button onclick="filterIOUs('Food', this)" class="px-3.5 py-1.5 rounded-full bg-surface-container text-on-surface-variant font-label-sm text-xs font-medium hover:bg-surface-container-high transition-colors">🍜 Food & Snacks</button>
+                    <!-- Smart Settlement Transfer Visualization -->
+                    <div class="rounded-2xl bg-surface-container-lowest p-5 md:p-6 shadow-xs space-y-4 border border-outline-variant/20">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2.5">
+                                <div class="w-10 h-10 rounded-xl bg-tertiary-fixed/30 text-tertiary flex items-center justify-center">
+                                    <span class="material-symbols-outlined text-[24px]">alt_route</span>
+                                </div>
+                                <div>
+                                    <h3 class="font-headline-sm text-base text-on-surface font-bold">Recommended Settlement Plan</h3>
+                                    <p class="font-label-sm text-xs text-on-surface-variant" id="settlePlanSubtitle">2 payments can settle all current balances.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-3" id="hostelSettlePlanContainer">
+                            <!-- Populated via JS -->
+                        </div>
                     </div>
 
-                    <!-- IOU Cards List -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="fullIOUsContainer">
-                        <!-- Populated via JS -->
+                    <!-- Individual Roommate Net Balances -->
+                    <div class="rounded-2xl bg-surface-container-lowest p-5 md:p-6 shadow-xs space-y-4 border border-outline-variant/20">
+                        <div class="flex items-center justify-between">
+                            <h3 class="font-headline-sm text-base font-bold text-on-surface">Roommate Net Balances</h3>
+                            <span class="font-label-sm text-xs text-on-surface-variant">Individual Dues</span>
+                        </div>
+                        <div class="flex flex-col space-y-2.5" id="hostelSettleRoommateBalancesList">
+                            <!-- Populated via JS -->
+                        </div>
                     </div>
                 </div>
 
-                <!-- SUB-VIEW 5: RECURRING BILLS -->
+                <!-- SUB-VIEW 7: DEDICATED ACTIVITY PAGE -->
+                <div id="hostelSubView-activity" class="hostel-subview hidden space-y-6">
+                    <!-- Header with Back Button -->
+                    <div class="flex items-center gap-3 pb-2 border-b border-outline-variant/20">
+                        <button onclick="navigateTo('#hostel')" class="w-10 h-10 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface flex items-center justify-center border border-outline-variant/30 transition-all shadow-2xs shrink-0 cursor-pointer" title="Back to Hostel">
+                            <span class="material-symbols-outlined text-[20px]">arrow_back</span>
+                        </button>
+                        <div>
+                            <h2 class="font-headline-lg text-xl md:text-2xl font-extrabold text-on-surface flex items-center gap-2">
+                                <span>📊</span> Room Activity
+                            </h2>
+                            <p class="font-body-md text-xs text-on-surface-variant">See everything that happened in your room</p>
+                        </div>
+                    </div>
+
+                    <!-- Chronological Activity Feed -->
+                    <div class="rounded-2xl bg-surface-container-lowest p-5 md:p-6 shadow-xs border border-outline-variant/20 space-y-4">
+                        <div class="flex items-center justify-between">
+                            <h3 class="font-headline-sm text-base font-bold text-on-surface">Activity Timeline</h3>
+                            <span class="font-label-sm text-xs text-primary font-bold">Live Room Log ⚡</span>
+                        </div>
+
+                        <div class="flex flex-col divide-y divide-surface-container" id="hostelActivityFullFeed">
+                            <!-- Populated via JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SUB-VIEW 8: RECURRING BILLS -->
                 <div id="hostelSubView-bills" class="hostel-subview hidden space-y-6">
                     <div class="flex flex-wrap items-center justify-between gap-3">
-                        <div>
-                            <h2 class="font-headline-sm text-lg md:text-xl font-bold text-on-surface">Recurring Hostel Bills</h2>
-                            <p class="font-body-md text-xs text-on-surface-variant">Wi-Fi, electricity, maid cleaning & water bill schedules.</p>
+                        <div class="flex items-center gap-3">
+                            <button onclick="navigateTo('#hostel')" class="w-10 h-10 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface flex items-center justify-center border border-outline-variant/30 transition-all shadow-2xs shrink-0 cursor-pointer" title="Back to Hostel">
+                                <span class="material-symbols-outlined text-[20px]">arrow_back</span>
+                            </button>
+                            <div>
+                                <h2 class="font-headline-sm text-lg md:text-xl font-bold text-on-surface">Recurring Hostel Bills</h2>
+                                <p class="font-body-md text-xs text-on-surface-variant">Wi-Fi, electricity, maid cleaning & water bill schedules.</p>
+                            </div>
                         </div>
-                        <button onclick="openAddBillModal()" class="px-4 py-2 rounded-xl bg-primary text-on-primary font-label-md text-xs font-bold shadow-sm hover:bg-secondary transition-all flex items-center gap-1.5">
+                        <button onclick="openAddBillModal()" class="px-4 py-2 rounded-xl bg-primary text-on-primary font-label-md text-xs font-bold shadow-sm hover:bg-secondary transition-all flex items-center gap-1.5 cursor-pointer">
                             <span class="material-symbols-outlined text-[18px]">add</span> Add Recurring Bill
                         </button>
                     </div>
@@ -734,11 +965,16 @@
                     </div>
                 </div>
 
-                <!-- SUB-VIEW 6: HOSTEL STATS & BADGES -->
+                <!-- SUB-VIEW 9: HOSTEL STATS -->
                 <div id="hostelSubView-stats" class="hostel-subview hidden space-y-6">
-                    <div>
-                        <h2 class="font-headline-sm text-lg md:text-xl font-bold text-on-surface">Hostel Room Leaderboard & Stats</h2>
-                        <p class="font-body-md text-xs text-on-surface-variant">Subtle monthly room badges and contributor analytics.</p>
+                    <div class="flex items-center gap-3">
+                        <button onclick="navigateTo('#hostel')" class="w-10 h-10 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface flex items-center justify-center border border-outline-variant/30 transition-all shadow-2xs shrink-0 cursor-pointer" title="Back to Hostel">
+                            <span class="material-symbols-outlined text-[20px]">arrow_back</span>
+                        </button>
+                        <div>
+                            <h2 class="font-headline-sm text-lg md:text-xl font-bold text-on-surface">Hostel Room Leaderboard & Stats</h2>
+                            <p class="font-body-md text-xs text-on-surface-variant">Subtle monthly room badges and contributor analytics.</p>
+                        </div>
                     </div>
 
                     <!-- Gamification Badges Grid -->
