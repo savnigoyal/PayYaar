@@ -6,7 +6,7 @@ let roomBudget = 20000;
 let activeCategoryFilter = "All";
 
 // Default clean initial state (No dummy data)
-const DEFAULT_FRIENDS = ["You"];
+const DEFAULT_FRIENDS = [];
 const DEFAULT_EXPENSES = [];
 
 // Helper: Get unique clean names
@@ -26,9 +26,26 @@ function getUniquePeople(people) {
 // ==================== INITIALIZATION ====================
 
 window.addEventListener("DOMContentLoaded", () => {
+  purgeLegacyDummyData();
   loadStoredData();
   renderAllComponents();
 });
+
+function purgeLegacyDummyData() {
+  // Purge any cached legacy dummy data from earlier sessions
+  const oldExpenses = localStorage.getItem("payyaar_expenses") || localStorage.getItem("expenses") || "";
+  const oldFriends = localStorage.getItem("payyaar_friends") || localStorage.getItem("friends") || "";
+
+  if (oldExpenses.includes("Midnight Maggi") || oldExpenses.includes("Wi-Fi Booster") || oldExpenses.includes("Biryani") || oldExpenses.includes("Water Can")) {
+    localStorage.removeItem("payyaar_expenses");
+    localStorage.removeItem("expenses");
+  }
+
+  if (oldFriends.includes("Rohit") || oldFriends.includes("Vikram") || oldFriends.includes("Rahul") || oldFriends.includes("Aman (You)")) {
+    localStorage.removeItem("payyaar_friends");
+    localStorage.removeItem("friends");
+  }
+}
 
 function loadStoredData() {
   const savedFriends = localStorage.getItem("payyaar_friends");
@@ -117,7 +134,7 @@ function renderFriendList() {
 
   friendList.innerHTML = "";
   if (friends.length === 0) {
-    friendList.innerHTML = `<li class="text-xs text-on-surface-variant italic">No roommates added yet.</li>`;
+    friendList.innerHTML = `<li class="text-xs text-on-surface-variant italic">No roommates added yet. Add a friend below!</li>`;
     return;
   }
 
@@ -126,7 +143,7 @@ function renderFriendList() {
     friendList.innerHTML += `
       <li class="px-2.5 py-1 rounded-full bg-surface-container text-on-surface font-semibold text-xs border border-outline-variant/30 flex items-center gap-1.5 shadow-2xs">
         <span>${friend}</span>
-        ${!isYou ? `<button type="button" onclick="removeFriend('${friend}')" class="text-outline hover:text-error text-xs ml-0.5 font-bold">×</button>` : `<span class="text-[10px] text-primary font-bold">(You)</span>`}
+        <button type="button" onclick="removeFriend('${friend}')" class="text-outline hover:text-error text-xs ml-0.5 font-bold">×</button>
       </li>
     `;
   });
@@ -185,7 +202,7 @@ function updatePaidByOptions() {
   }
 
   friends.forEach(friend => {
-    const selected = friend === currentVal || (currentVal === "" && (friend === "You" || friend.includes("(You)"))) ? "selected" : "";
+    const selected = friend === currentVal ? "selected" : "";
     paidBy.innerHTML += `<option value="${friend}" ${selected}>${friend}</option>`;
   });
 }
@@ -262,7 +279,7 @@ function handleFormAddExpense() {
   splitBetween = getUniquePeople(splitBetween);
 
   if (splitBetween.length === 0) {
-    splitBetween = friends.length > 0 ? [...friends] : ["You"];
+    splitBetween = friends.length > 0 ? [...friends] : [paidBy];
   }
 
   if (title === "" || isNaN(amount) || amount <= 0 || !paidBy) {
@@ -271,12 +288,12 @@ function handleFormAddExpense() {
   }
 
   const categoryTags = {
-    "Food & Mess": "Mess & Food 🍜",
-    "Groceries": "Room Supplies 🛒",
+    "Food & Mess": "Food & Mess 🍜",
+    "Groceries": "Groceries 🛒",
     "Wi-Fi & Bills": "Bills & Net 📶",
-    "Rent & Maid": "Hostel Rent 🧹",
-    "Cab": "Travel 🚕",
-    "Other": "Instant Split ✨"
+    "Rent & Maid": "Rent & Maid 🧹",
+    "Cab": "Cab & Travel 🚕",
+    "Other": "Expense ✨"
   };
 
   const newExp = {
@@ -287,7 +304,7 @@ function handleFormAddExpense() {
     category,
     splitBetween,
     date: "Just now",
-    tag: categoryTags[category] || "Instant Split ✨"
+    tag: categoryTags[category] || "Expense ✨"
   };
 
   expenses.unshift(newExp);
@@ -478,7 +495,7 @@ function calculateBalancesAndRender() {
     });
   });
 
-  const youName = friends.find(f => f === "You" || f.includes("(You)")) || friends[0] || "You";
+  const youName = friends[0] || "You";
   const youNet = netBalances[youName] || 0;
 
   const netShareHero = document.getElementById("netShareHero");
@@ -527,9 +544,7 @@ function renderRoommateCards(netBalances, youName) {
 
   container.innerHTML = "";
 
-  const otherFriends = friends.filter(f => f !== youName);
-
-  if (otherFriends.length === 0) {
+  if (friends.length === 0) {
     container.innerHTML = `
       <div class="p-5 text-center bg-surface-container-low/70 rounded-xl border border-dashed border-outline-variant/30 text-on-surface-variant my-1">
         <span class="material-symbols-outlined text-[28px] text-outline block mb-1">group_add</span>
@@ -543,7 +558,7 @@ function renderRoommateCards(netBalances, youName) {
   const bgColors = ["bg-surface-container-high text-primary", "bg-surface-container-high text-secondary", "bg-error-container text-on-error-container"];
 
   let index = 0;
-  otherFriends.forEach(friend => {
+  friends.forEach(friend => {
     const net = netBalances[friend] || 0;
     const isOwedToYou = net >= 0;
     const displayAmount = Math.abs(Math.round(net));
@@ -563,7 +578,7 @@ function renderRoommateCards(netBalances, youName) {
               <span class="font-label-sm text-[10px] text-on-surface-variant bg-surface-container px-1.5 py-0.2 rounded font-medium">Roommate 🤝</span>
             </div>
             <span class="font-label-sm text-xs text-on-surface-variant truncate">
-              ${net === 0 ? "Settled / No Dues" : isOwedToYou ? `Owes you ₹${displayAmount}` : `You owe ₹${displayAmount}`}
+              ${net === 0 ? "Settled / No Dues" : isOwedToYou ? `Owes ₹${displayAmount}` : `Owes ₹${displayAmount}`}
             </span>
           </div>
         </div>
@@ -573,7 +588,7 @@ function renderRoommateCards(netBalances, youName) {
             ${net === 0 ? '₹0' : isOwedToYou ? `+₹${displayAmount}` : `-₹${displayAmount}`}
           </span>
           ${net !== 0 ? (isOwedToYou ? `
-            <button onclick="nudgeRoommate('${friend}', ${displayAmount}, 'Shared Room Expense')" class="px-2.5 py-1 rounded-lg bg-primary text-on-primary font-label-sm text-xs font-semibold shadow-2xs active:scale-95 transition-all flex items-center gap-1 hover:bg-secondary">
+            <button onclick="nudgeRoommate('${friend}', ${displayAmount}, 'Shared Expense')" class="px-2.5 py-1 rounded-lg bg-primary text-on-primary font-label-sm text-xs font-semibold shadow-2xs active:scale-95 transition-all flex items-center gap-1 hover:bg-secondary">
               <span class="material-symbols-outlined text-[13px]">send</span> Nudge
             </button>
           ` : `
@@ -661,10 +676,12 @@ function updateBudgetTracker() {
 
 function clearAllDataPrompt() {
   if (confirm("Clear all expenses and roommates data?")) {
-    friends = [...DEFAULT_FRIENDS];
-    expenses = [...DEFAULT_EXPENSES];
-    localStorage.setItem("payyaar_friends", JSON.stringify(friends));
-    localStorage.setItem("payyaar_expenses", JSON.stringify(expenses));
+    friends = [];
+    expenses = [];
+    localStorage.removeItem("payyaar_friends");
+    localStorage.removeItem("payyaar_expenses");
+    localStorage.removeItem("friends");
+    localStorage.removeItem("expenses");
     renderAllComponents();
     showToast("All data cleared!", "info");
   }
