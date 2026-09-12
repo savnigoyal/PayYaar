@@ -1,402 +1,682 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html class="h-full bg-surface" lang="en">
 <head>
-
-    <meta charset="UTF-8">
-
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
-
-    <title>PayYaar</title>
-
-    <link rel="stylesheet" href="style.css">
-
-    <!-- GOOGLE FONT -->
-
-    <link
-        href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
-        rel="stylesheet">
-
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport">
+    <title>PayYaar - Hostel Kharcha Split</title>
+    
+    <link href="https://fonts.googleapis.com" rel="preconnect">
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "primary-fixed-dim": "#c0c1ff",
+            "inverse-on-surface": "#eef0ff",
+            "on-tertiary-fixed-variant": "#005236",
+            "outline": "#767586",
+            "tertiary-fixed": "#6ffbbe",
+            "surface-container-high": "#e2e7ff",
+            "inverse-primary": "#c0c1ff",
+            "tertiary-fixed-dim": "#4edea3",
+            "surface": "#faf8ff",
+            "secondary-fixed-dim": "#c3c0ff",
+            "surface-variant": "#dae2fd",
+            "surface-bright": "#faf8ff",
+            "error-container": "#ffdad6",
+            "on-primary": "#ffffff",
+            "tertiary-container": "#00885d",
+            "surface-container-highest": "#dae2fd",
+            "surface-tint": "#494bd6",
+            "on-surface": "#131b2e",
+            "outline-variant": "#c7c4d7",
+            "on-primary-fixed-variant": "#2f2ebe",
+            "on-error-container": "#93000a",
+            "inverse-surface": "#283044",
+            "tertiary": "#006c49",
+            "primary": "#4648d4",
+            "on-background": "#131b2e",
+            "on-primary-fixed": "#07006c",
+            "error": "#ba1a1a",
+            "on-surface-variant": "#464554",
+            "on-tertiary-container": "#000703",
+            "secondary-container": "#6860ef",
+            "on-tertiary": "#ffffff",
+            "on-tertiary-fixed": "#002113",
+            "surface-container": "#eaedff",
+            "secondary": "#4e45d5",
+            "on-primary-container": "#fffbff",
+            "surface-dim": "#d2d9f4",
+            "surface-container-lowest": "#ffffff",
+            "on-error": "#ffffff",
+            "secondary-fixed": "#e3dfff",
+            "background": "#faf8ff",
+            "on-secondary-fixed-variant": "#372abf",
+            "on-secondary-fixed": "#100069",
+            "on-secondary": "#ffffff",
+            "primary-fixed": "#e1e0ff",
+            "surface-container-low": "#f2f3ff",
+            "on-secondary-container": "#fffbff",
+            "primary-container": "#6063ee"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "space-lg": "1.5rem",
+            "space-xs": "0.25rem",
+            "space-sm": "0.5rem",
+            "gutter": "1rem",
+            "gutter-desktop": "1.5rem",
+            "space-xl": "2rem",
+            "margin": "1rem",
+            "space-md": "1rem",
+            "margin-desktop": "2rem"
+          },
+          "fontFamily": {
+            "body-md": ["Inter"],
+            "currency-display": ["Inter"],
+            "headline-md": ["Inter"],
+            "body-lg": ["Inter"],
+            "currency-metric": ["Inter"],
+            "display-lg-mobile": ["Inter"],
+            "label-sm": ["Inter"],
+            "headline-sm": ["Inter"],
+            "label-md": ["Inter"],
+            "display-lg": ["Inter"],
+            "headline-lg": ["Inter"],
+            "body-sm": ["Inter"]
+          },
+          "fontSize": {
+            "body-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0em", "fontWeight": "400"}],
+            "currency-display": ["36px", {"lineHeight": "44px", "letterSpacing": "-0.03em", "fontWeight": "700"}],
+            "headline-md": ["22px", {"lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+            "body-lg": ["16px", {"lineHeight": "24px", "letterSpacing": "0em", "fontWeight": "400"}],
+            "currency-metric": ["24px", {"lineHeight": "30px", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+            "display-lg-mobile": ["32px", {"lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+            "label-sm": ["11px", {"lineHeight": "14px", "letterSpacing": "0.05em", "fontWeight": "500"}],
+            "headline-sm": ["18px", {"lineHeight": "24px", "letterSpacing": "-0.005em", "fontWeight": "600"}],
+            "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.04em", "fontWeight": "600"}],
+            "display-lg": ["40px", {"lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+            "headline-lg": ["28px", {"lineHeight": "36px", "letterSpacing": "-0.015em", "fontWeight": "600"}],
+            "body-sm": ["13px", {"lineHeight": "18px", "letterSpacing": "0.005em", "fontWeight": "400"}]
+          }
+        }
+      }
+    }
+    </script>
+    <link rel="stylesheet" href="style.css?v=2.0">
 </head>
+<body class="bg-surface font-body-md text-body-md text-on-surface flex flex-col min-h-full antialiased selection:bg-primary-fixed">
 
-<body>
+    <!-- HEADER NAVBAR -->
+    <header class="fixed top-0 w-full z-50 pt-safe bg-surface/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
+        <div class="h-16 px-margin flex items-center justify-between gap-space-sm max-w-xl mx-auto">
+            <div class="flex items-center gap-space-sm min-w-0">
+                <img alt="PayYaar Logo" class="h-9 w-auto object-contain shrink-0 rounded-lg shadow-sm" src="logo.png">
+                <div class="flex flex-col min-w-0">
+                    <div class="flex items-center gap-1.5">
+                        <span class="font-headline-sm text-headline-sm text-on-surface tracking-tight truncate font-bold">PayYaar</span>
+                    </div>
+                    <span class="font-label-sm text-label-sm text-on-surface-variant truncate">Hostel OS Dashboard</span>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-space-xs shrink-0">
+                <div class="hidden xs:flex items-center gap-1 px-2.5 py-1 rounded-full bg-surface-container text-on-surface-variant">
+                    <span class="material-symbols-outlined text-[14px] text-tertiary">apartment</span>
+                    <span class="font-label-sm text-label-sm truncate">Block B · Ganga Wing</span>
+                </div>
+                <button aria-label="Notifications" onclick="openNotificationsModal()" class="w-11 h-11 flex items-center justify-center rounded-full text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors relative">
+                    <span class="material-symbols-outlined text-[22px]">notifications</span>
+                    <span class="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-primary ring-2 ring-surface"></span>
+                </button>
+                <button aria-label="Profile" onclick="openProfileModal()" class="w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold text-sm shadow-sm hover:scale-105 transition-transform">
+                    <span class="material-symbols-outlined text-on-primary text-[18px]">person</span>
+                </button>
+            </div>
+        </div>
+    </header>
 
-    <!-- NAVBAR -->
+    <!-- MAIN APP CONTAINER -->
+    <main class="flex flex-col relative w-full pt-20 pb-28 bg-surface min-h-screen">
+        <div class="flex flex-col w-full px-margin space-y-space-lg max-w-xl mx-auto">
+            
+            <!-- Room Header Badge & Value Proposition -->
+            <div class="flex flex-col pt-space-sm space-y-space-xs" id="dashboard-top">
+                <div class="flex items-center justify-between gap-2">
+                    <div class="inline-flex items-center gap-1.5 self-start px-2.5 py-1 rounded-full bg-surface-container text-on-surface-variant">
+                        <span class="material-symbols-outlined text-[14px] text-primary" style="font-variation-settings: 'FILL' 1;">night_shelter</span>
+                        <span class="font-label-sm text-label-sm font-semibold tracking-wide" id="roomNameDisplay">Room 304, Block B · Boys Hostel</span>
+                    </div>
+                </div>
+                
+                <div class="space-y-1">
+                    <h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight leading-tight font-extrabold">Hostel kharcha split without awkwardness</h1>
+                    <p class="font-body-md text-body-md text-on-surface-variant leading-relaxed">Room 304's shared ledger: Maggi runs, late night canteen raids & Wi-Fi booster splits without the tension.</p>
+                </div>
+                
+                <!-- Avatars & View Switcher -->
+                <div class="flex items-center justify-between pt-1 overflow-x-auto pb-1 gap-2">
+                    <div class="flex items-center -space-x-2" id="roommateAvatarsRow">
+                        <div class="w-8 h-8 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-label-md text-label-md font-bold shadow-sm ring-2 ring-surface" title="Aman (You)">A</div>
+                        <div class="w-8 h-8 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center font-label-md text-label-md font-bold shadow-sm ring-2 ring-surface" title="Rohit Sharma">R</div>
+                        <div class="w-8 h-8 rounded-full bg-tertiary text-on-tertiary flex items-center justify-center font-label-md text-label-md font-bold shadow-sm ring-2 ring-surface" title="Vikram Patel">V</div>
+                        <div class="w-8 h-8 rounded-full bg-surface-container-highest text-on-surface flex items-center justify-center font-label-md text-label-md font-bold shadow-sm ring-2 ring-surface" title="Rahul Verma">R</div>
+                    </div>
+                    
+                    <div class="flex items-center gap-1.5">
+                        <span class="font-label-sm text-label-sm text-on-surface-variant font-medium" id="activeYaarsBadge">4 Yaars Active</span>
+                        <span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>
+                        <button class="px-2.5 py-1 rounded-full bg-surface-container-high text-on-surface font-label-sm text-label-sm font-semibold hover:bg-surface-container transition-colors border border-outline-variant/30" id="toggleDemoState" onclick="toggleDashboardState()">
+                            Toggle Empty State
+                        </button>
+                    </div>
+                </div>
+            </div>
 
-    <nav class="navbar">
+            <!-- POPULATED DASHBOARD VIEW -->
+            <div class="flex flex-col space-y-space-lg w-full" id="activeDashboardView">
+                
+                <!-- Primary Financial Hero Metric Card -->
+                <div class="relative overflow-hidden rounded-2xl bg-primary text-on-primary p-space-lg shadow-xl shadow-primary/20 space-y-space-md">
+                    <!-- Ambient Aura Glow -->
+                    <div class="absolute -right-8 -top-8 w-44 h-44 rounded-full bg-primary-container/40 blur-2xl pointer-events-none"></div>
+                    
+                    <div class="relative flex items-center justify-between">
+                        <div class="flex items-center gap-1.5 text-primary-fixed">
+                            <span class="material-symbols-outlined text-[18px]">account_balance</span>
+                            <span class="font-label-md text-label-md tracking-wider uppercase font-semibold">Total Group Expenses</span>
+                        </div>
+                        <span class="px-2.5 py-0.5 rounded-full bg-primary-container text-on-primary font-label-sm text-label-sm font-semibold" id="weeklyTrendBadge">
+                            +₹2,400 this week
+                        </span>
+                    </div>
+                    
+                    <div class="relative flex items-baseline gap-1">
+                        <span class="font-currency-display text-currency-display text-on-primary tracking-tight font-extrabold" id="totalExpensesHero">₹14,850</span>
+                        <span class="font-body-sm text-body-sm text-primary-fixed" id="monthLabel">/ month</span>
+                    </div>
 
-        <div class="logo-section">
+                    <!-- Secondary Metrics Row -->
+                    <div class="relative grid grid-cols-3 gap-2 pt-3 border-t border-primary-container/40">
+                        <div class="flex flex-col">
+                            <span class="font-label-sm text-label-sm text-primary-fixed">Your Net Share</span>
+                            <span class="font-headline-sm text-headline-sm font-bold text-on-primary" id="netShareHero">₹3,620</span>
+                            <span class="font-label-sm text-label-sm text-tertiary-fixed font-medium truncate" id="netShareStatusHero">+₹1,850 lent</span>
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="font-label-sm text-label-sm text-primary-fixed">Roommates</span>
+                            <span class="font-headline-sm text-headline-sm font-bold text-on-primary" id="roommatesCountHero">4 Active</span>
+                            <span class="font-label-sm text-label-sm text-primary-fixed truncate" id="roommatesSummaryHero">Aman, Rohit...</span>
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="font-label-sm text-label-sm text-primary-fixed">Ledger Entries</span>
+                            <span class="font-headline-sm text-headline-sm font-bold text-on-primary" id="ledgerEntriesCountHero">18 Logs</span>
+                            <span class="font-label-sm text-label-sm text-primary-fixed font-medium">100% Verified</span>
+                        </div>
+                    </div>
 
-            <img
-                src="logo.png"
-                alt="PayYaar Logo">
+                    <!-- Fast Action Shortcut Buttons -->
+                    <div class="relative flex items-center gap-space-sm pt-1">
+                        <button onclick="scrollToSection('quickAddExpense'); focusAddExpense();" class="flex-1 h-11 rounded-xl bg-surface-container-lowest text-primary font-headline-sm text-[14px] font-bold flex items-center justify-center gap-1.5 shadow-sm active:scale-95 transition-all">
+                            <span class="material-symbols-outlined text-[18px]">add</span>
+                            Add Expense
+                        </button>
+                        <button onclick="scrollToSection('quickSettleUp')" class="h-11 px-4 rounded-xl bg-primary-container text-on-primary font-headline-sm text-[14px] font-semibold flex items-center justify-center gap-1 hover:bg-secondary-container active:scale-95 transition-all">
+                            <span class="material-symbols-outlined text-[18px]">handshake</span>
+                            Settle Up
+                        </button>
+                    </div>
+                </div>
 
-            <h2>PayYaar</h2>
+                <!-- Hostel Quick Splits (Preset Quick Fill Chips) -->
+                <div class="rounded-2xl bg-surface-container-lowest p-space-md shadow-sm space-y-2 border border-outline-variant/20">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-1.5">
+                            <span class="material-symbols-outlined text-[18px] text-primary">bolt</span>
+                            <span class="font-headline-sm text-[15px] text-on-surface font-semibold">Hostel Quick Splits</span>
+                        </div>
+                        <span class="font-label-sm text-label-sm text-on-surface-variant">Tap to auto-fill</span>
+                    </div>
+                    
+                    <div class="flex items-center gap-2 overflow-x-auto pb-1 pt-0.5 no-scrollbar">
+                        <button type="button" onclick="quickFillExpense('Midnight Maggi Split', 180, 'Mess')" class="px-3 py-1.5 rounded-full bg-surface-container-low hover:bg-surface-container text-on-surface font-label-sm text-label-sm font-medium flex items-center gap-1.5 shrink-0 border border-outline-variant/30 transition-all hover:scale-105">
+                            <span class="text-[14px]">🍜</span> Midnight Maggi Split
+                        </button>
+                        <button type="button" onclick="quickFillExpense('20L Water Can Refill', 90, 'Groceries')" class="px-3 py-1.5 rounded-full bg-surface-container-low hover:bg-surface-container text-on-surface font-label-sm text-label-sm font-medium flex items-center gap-1.5 shrink-0 border border-outline-variant/30 transition-all hover:scale-105">
+                            <span class="text-[14px]">🚰</span> 20L Water Can Refill
+                        </button>
+                        <button type="button" onclick="quickFillExpense('Canteen Chai & Sutta', 120, 'Mess')" class="px-3 py-1.5 rounded-full bg-surface-container-low hover:bg-surface-container text-on-surface font-label-sm text-label-sm font-medium flex items-center gap-1.5 shrink-0 border border-outline-variant/30 transition-all hover:scale-105">
+                            <span class="text-[14px]">☕</span> Canteen Chai & Sutta
+                        </button>
+                        <button type="button" onclick="quickFillExpense('Auto to Campus Gate', 150, 'Cab')" class="px-3 py-1.5 rounded-full bg-surface-container-low hover:bg-surface-container text-on-surface font-label-sm text-label-sm font-medium flex items-center gap-1.5 shrink-0 border border-outline-variant/30 transition-all hover:scale-105">
+                            <span class="text-[14px]">🛵</span> Auto to Campus Gate
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Monthly Hostel Budget Tracker -->
+                <div class="rounded-2xl bg-surface-container-lowest p-space-md shadow-sm space-y-space-sm border border-outline-variant/20">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <div class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-primary">
+                                <span class="material-symbols-outlined text-[20px]">savings</span>
+                            </div>
+                            <div>
+                                <h2 class="font-headline-sm text-headline-sm text-on-surface font-bold">Room 304 Hostel Fund</h2>
+                                <p class="font-label-sm text-label-sm text-on-surface-variant">Monthly Mess, Cooler Rent & Wi-Fi Pot</p>
+                            </div>
+                        </div>
+                        <button onclick="promptSetBudget()" class="px-2.5 py-1 rounded-lg bg-surface-container text-primary font-label-md text-label-md font-semibold hover:bg-surface-container-high transition-colors">
+                            Edit Fund
+                        </button>
+                    </div>
+                    
+                    <div class="space-y-1.5 pt-1">
+                        <div class="flex items-center justify-between font-label-sm text-label-sm">
+                            <span class="text-on-surface font-semibold" id="budgetFundText">₹14,850 of ₹20,000 pooled</span>
+                            <span class="text-tertiary font-bold bg-tertiary-fixed/30 px-2 py-0.5 rounded-full flex items-center gap-1" id="budgetStatusBadge">
+                                74% · Month-End Safe 🛡️
+                            </span>
+                        </div>
+                        
+                        <div class="w-full h-2.5 rounded-full bg-surface-container overflow-hidden flex">
+                            <div class="bg-primary h-full rounded-full transition-all duration-500" id="budgetProgressBar" style="width: 74%;"></div>
+                        </div>
+                        
+                        <div class="flex items-center justify-between text-on-surface-variant font-label-sm text-label-sm pt-0.5">
+                            <span id="budgetRemainingText">₹5,150 left for 11 days</span>
+                            <span id="budgetDailyText">~₹468 / day room allowance</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Roommate Balance Breakdown (No Awkwardness) -->
+                <div class="rounded-2xl bg-surface-container-lowest p-space-md shadow-sm space-y-space-md border border-outline-variant/20" id="quickSettleUp">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <div class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-tertiary">
+                                <span class="material-symbols-outlined text-[20px]">payments</span>
+                            </div>
+                            <div>
+                                <h2 class="font-headline-sm text-headline-sm text-on-surface font-bold">Roommate Balances</h2>
+                                <p class="font-label-sm text-label-sm text-on-surface-variant">Zero awkwardness · Settle via UPI</p>
+                            </div>
+                        </div>
+                        <span class="font-label-sm text-label-sm text-tertiary font-semibold bg-tertiary-fixed/30 px-2.5 py-1 rounded-full" id="roommateNetOwedBanner">
+                            You are owed ₹1,850 net
+                        </span>
+                    </div>
+
+                    <!-- Dynamic Roommates Balance List -->
+                    <div class="flex flex-col space-y-2" id="roommateBalancesList">
+                        <!-- Populated dynamically via script.js -->
+                    </div>
+                </div>
+
+                <!-- Quick Add Expense Form Card -->
+                <div class="rounded-2xl bg-surface-container-lowest p-space-md shadow-sm space-y-space-md border border-outline-variant/20" id="quickAddExpense">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <div class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-primary">
+                                <span class="material-symbols-outlined text-[20px]">post_add</span>
+                            </div>
+                            <div>
+                                <h2 class="font-headline-sm text-headline-sm text-on-surface font-bold">Add Expense</h2>
+                                <p class="font-label-sm text-label-sm text-on-surface-variant">Quick split for your hostel room</p>
+                            </div>
+                        </div>
+                        <span class="font-label-sm text-label-sm text-on-surface-variant bg-surface-container px-2 py-0.5 rounded-full">Instant Split</span>
+                    </div>
+
+                    <form class="space-y-3" id="addExpenseForm" onsubmit="event.preventDefault(); handleFormAddExpense();">
+                        <!-- Title input -->
+                        <div class="space-y-1">
+                            <label class="font-label-md text-label-md text-on-surface-variant font-medium">Expense Title</label>
+                            <div class="flex items-center rounded-xl bg-surface-container-low px-3 py-2.5 border border-outline-variant/20 focus-within:border-primary transition-all">
+                                <span class="material-symbols-outlined text-on-surface-variant text-[18px] mr-2">receipt</span>
+                                <input class="bg-transparent w-full text-on-surface font-body-md text-body-md focus:outline-none placeholder:text-outline" id="expenseTitle" placeholder="e.g. Canteen Dues, Maggi Stash or 20L Water Can" required type="text">
+                            </div>
+                        </div>
+
+                        <!-- Amount Input & Category -->
+                        <div class="grid grid-cols-2 gap-2">
+                            <div class="space-y-1">
+                                <label class="font-label-md text-label-md text-on-surface-variant font-medium">Total Amount</label>
+                                <div class="flex items-center rounded-xl bg-surface-container-low px-3 py-2 border border-outline-variant/20 focus-within:border-primary transition-all">
+                                    <span class="font-headline-sm text-headline-sm text-on-surface-variant font-bold mr-1.5">₹</span>
+                                    <input class="bg-transparent w-full text-on-surface font-headline-sm text-headline-sm font-semibold focus:outline-none placeholder:text-outline" id="expenseAmount" placeholder="0.00" required type="number" step="any">
+                                </div>
+                            </div>
+                            
+                            <div class="space-y-1">
+                                <label class="font-label-md text-label-md text-on-surface-variant font-medium">Category</label>
+                                <div class="relative">
+                                    <select id="expenseCategory" class="w-full appearance-none rounded-xl bg-surface-container-low px-3 py-2.5 text-on-surface font-body-md text-body-md focus:outline-none border border-outline-variant/20 pr-8">
+                                        <option value="Food & Mess">🍜 Food & Mess</option>
+                                        <option value="Groceries">🛒 Groceries</option>
+                                        <option value="Wi-Fi & Bills">📶 Wi-Fi & Bills</option>
+                                        <option value="Rent & Maid">🧹 Rent & Maid</option>
+                                        <option value="Cab">🚕 Cab & Travel</option>
+                                        <option value="Other">✨ Other</option>
+                                    </select>
+                                    <span class="material-symbols-outlined text-[18px] text-on-surface-variant absolute right-3 top-3 pointer-events-none">expand_more</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Who Paid Selection -->
+                        <div class="space-y-1">
+                            <label class="font-label-md text-label-md text-on-surface-variant font-medium">Select who paid</label>
+                            <div class="relative">
+                                <select id="paidBy" class="w-full appearance-none rounded-xl bg-surface-container-low px-3 py-2.5 text-on-surface font-body-md text-body-md focus:outline-none border border-outline-variant/20 pr-8">
+                                    <!-- Populated dynamically via JS -->
+                                </select>
+                                <span class="material-symbols-outlined text-[18px] text-on-surface-variant absolute right-3 top-3 pointer-events-none">expand_more</span>
+                            </div>
+                        </div>
+
+                        <!-- Split Distribution Chips -->
+                        <div class="space-y-1.5">
+                            <label class="font-label-md text-label-md text-on-surface-variant font-medium">To be split between</label>
+                            <div class="grid grid-cols-1 gap-2" id="splitPeople">
+                                <!-- Populated dynamically with checkboxes via script.js -->
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <button id="addExpenseBtn" class="w-full h-11 mt-2 rounded-xl bg-primary text-on-primary font-headline-sm text-[15px] font-bold shadow-md shadow-primary/25 active:scale-95 hover:bg-secondary-container transition-all flex items-center justify-center gap-2" type="submit">
+                            <span class="material-symbols-outlined text-[20px]">check</span>
+                            Add Expense
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Quick Add Friend / Roommate Bar -->
+                <div class="rounded-2xl bg-surface-container-lowest p-space-md shadow-sm space-y-space-sm border border-outline-variant/20" id="addFriendSection">
+                    <div class="flex items-center gap-2">
+                        <div class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-primary">
+                            <span class="material-symbols-outlined text-[20px]">person_add</span>
+                        </div>
+                        <div>
+                            <h2 class="font-headline-sm text-headline-sm text-on-surface font-bold">Add Friend</h2>
+                            <p class="font-label-sm text-label-sm text-on-surface-variant">Invite a roommate via UPI phone number or name</p>
+                        </div>
+                    </div>
+                    
+                    <form class="flex items-center gap-2" onsubmit="event.preventDefault(); addFriend();">
+                        <input id="friendInput" class="flex-1 rounded-xl bg-surface-container-low px-3 py-2.5 text-on-surface font-body-md text-body-md focus:outline-none placeholder:text-outline border border-outline-variant/20 focus:border-primary transition-all" placeholder="Enter friend name or UPI ID..." type="text">
+                        <button type="submit" class="h-10 px-4 rounded-xl bg-primary text-on-primary font-label-md text-label-md font-semibold hover:bg-secondary transition-colors shrink-0 shadow-sm active:scale-95">
+                            Add Friend
+                        </button>
+                    </form>
+
+                    <!-- Active Friends Tag List -->
+                    <div class="pt-1">
+                        <span class="font-label-sm text-label-sm text-on-surface-variant block mb-1">Active Roommates in Group:</span>
+                        <ul class="flex flex-wrap gap-1.5" id="friendList">
+                            <!-- Populated dynamically -->
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Expense History Feed -->
+                <div class="rounded-2xl bg-surface-container-lowest p-space-md shadow-sm space-y-space-sm border border-outline-variant/20" id="expenseHistory">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <div class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-primary">
+                                <span class="material-symbols-outlined text-[20px]">receipt_long</span>
+                            </div>
+                            <div>
+                                <h2 class="font-headline-sm text-headline-sm text-on-surface font-bold">Expense History</h2>
+                                <p class="font-label-sm text-label-sm text-on-surface-variant">Recent ledger entries</p>
+                            </div>
+                        </div>
+                        <button onclick="clearSearchFilter()" class="font-label-sm text-label-sm text-primary font-semibold hover:underline">View All</button>
+                    </div>
+
+                    <!-- Feed Category Filter Chips -->
+                    <div class="flex items-center gap-1.5 overflow-x-auto pb-1 pt-0.5 no-scrollbar" id="categoryFilterContainer">
+                        <button onclick="setCategoryFilter('All', this)" class="px-3 py-1 rounded-full bg-primary text-on-primary font-label-sm text-label-sm font-semibold shrink-0 shadow-xs">
+                            All (<span id="countAll">0</span>)
+                        </button>
+                        <button onclick="setCategoryFilter('Food & Mess', this)" class="px-3 py-1 rounded-full bg-surface-container text-on-surface-variant font-label-sm text-label-sm font-medium hover:bg-surface-container-high transition-colors shrink-0">
+                            Food & Mess
+                        </button>
+                        <button onclick="setCategoryFilter('Groceries', this)" class="px-3 py-1 rounded-full bg-surface-container text-on-surface-variant font-label-sm text-label-sm font-medium hover:bg-surface-container-high transition-colors shrink-0">
+                            Groceries
+                        </button>
+                        <button onclick="setCategoryFilter('Wi-Fi & Bills', this)" class="px-3 py-1 rounded-full bg-surface-container text-on-surface-variant font-label-sm text-label-sm font-medium hover:bg-surface-container-high transition-colors shrink-0">
+                            Wi-Fi & Bills
+                        </button>
+                        <button onclick="setCategoryFilter('Rent & Maid', this)" class="px-3 py-1 rounded-full bg-surface-container text-on-surface-variant font-label-sm text-label-sm font-medium hover:bg-surface-container-high transition-colors shrink-0">
+                            Rent & Maid
+                        </button>
+                    </div>
+
+                    <!-- Search Input Filter -->
+                    <div class="relative pt-1">
+                        <span class="material-symbols-outlined text-[18px] text-outline absolute left-3 top-3.5 pointer-events-none">search</span>
+                        <input id="searchInput" oninput="filterExpenses()" class="w-full rounded-xl bg-surface-container-low pl-9 pr-3 py-2 text-on-surface font-body-sm text-body-sm focus:outline-none placeholder:text-outline border border-outline-variant/20" placeholder="Search expense title, payer or category...">
+                    </div>
+
+                    <!-- Transaction List Items -->
+                    <div class="flex flex-col divide-y divide-surface-container" id="expenseList">
+                        <!-- Populated dynamically via script.js -->
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- EMPTY STATE DEMO VIEW (Toggleable for zero-state) -->
+            <div class="hidden flex-col space-y-space-md w-full" id="emptyDashboardView">
+                <!-- Hero metric at zero state -->
+                <div class="rounded-2xl bg-surface-container-lowest p-space-lg shadow-sm text-center space-y-space-sm border border-outline-variant/20">
+                    <div class="w-16 h-16 rounded-full bg-surface-container mx-auto flex items-center justify-center text-primary">
+                        <span class="material-symbols-outlined text-[32px]">cottage</span>
+                    </div>
+                    <div class="space-y-1">
+                        <span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-semibold">Expense Group</span>
+                        <h2 class="font-headline-md text-headline-md text-on-surface font-bold">No Active Group</h2>
+                        <p class="font-body-md text-body-md text-on-surface-variant">Start by creating your flat or hostel wing group</p>
+                    </div>
+                    
+                    <!-- Create Group Input & Action -->
+                    <div class="pt-2 max-w-sm mx-auto space-y-2">
+                        <input id="newGroupNameInput" class="w-full rounded-xl bg-surface-container-low px-3 py-2.5 text-on-surface font-body-md text-body-md focus:outline-none placeholder:text-outline border border-outline-variant/20" placeholder="Enter group name (e.g. Room 304 Boys)" type="text">
+                        <button onclick="createNewGroupFromEmptyState()" class="w-full h-11 rounded-xl bg-primary text-on-primary font-headline-sm text-[14px] font-bold flex items-center justify-center gap-1.5 shadow-sm hover:bg-secondary transition-all">
+                            <span class="material-symbols-outlined text-[18px]">add_circle</span>
+                            Create Group
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Zero State Metric Cards -->
+                <div class="grid grid-cols-3 gap-2">
+                    <div class="rounded-xl bg-surface-container-lowest p-3 shadow-xs text-center border border-outline-variant/20">
+                        <span class="material-symbols-outlined text-tertiary text-[20px]">payments</span>
+                        <span class="font-label-sm text-label-sm text-on-surface-variant block mt-1">Total Expenses</span>
+                        <span class="font-currency-metric text-currency-metric text-on-surface font-bold">₹0</span>
+                    </div>
+                    <div class="rounded-xl bg-surface-container-lowest p-3 shadow-xs text-center border border-outline-variant/20">
+                        <span class="material-symbols-outlined text-primary text-[20px]">group</span>
+                        <span class="font-label-sm text-label-sm text-on-surface-variant block mt-1">Friends</span>
+                        <span class="font-currency-metric text-currency-metric text-on-surface font-bold">0</span>
+                    </div>
+                    <div class="rounded-xl bg-surface-container-lowest p-3 shadow-xs text-center border border-outline-variant/20">
+                        <span class="material-symbols-outlined text-secondary text-[20px]">receipt</span>
+                        <span class="font-label-sm text-label-sm text-on-surface-variant block mt-1">Transactions</span>
+                        <span class="font-currency-metric text-currency-metric text-on-surface font-bold">0</span>
+                    </div>
+                </div>
+
+                <!-- Empty History Message -->
+                <div class="rounded-2xl bg-surface-container-lowest p-space-lg text-center shadow-sm space-y-2 border border-outline-variant/20">
+                    <div class="w-12 h-12 rounded-full bg-surface-container mx-auto flex items-center justify-center text-on-surface-variant">
+                        <span class="material-symbols-outlined text-[24px]">description</span>
+                    </div>
+                    <h3 class="font-headline-sm text-headline-sm text-on-surface font-bold">Expense History</h3>
+                    <p class="font-body-md text-body-md text-on-surface-variant">No expenses added yet ✨</p>
+                    <button class="mt-1 px-4 py-2 rounded-xl bg-surface-container text-primary font-label-md text-label-md font-semibold hover:bg-surface-container-high transition-colors" onclick="toggleDashboardState()">
+                        Switch to Populated View
+                    </button>
+                </div>
+            </div>
+
+            <!-- Hostel Life Trust Footer Note -->
+            <div class="flex flex-col items-center justify-center pt-space-sm pb-space-lg text-center space-y-1">
+                <div class="flex items-center gap-1.5 text-on-surface-variant font-label-md text-label-md">
+                    <span>Made with</span>
+                    <span class="material-symbols-outlined text-[16px] text-primary" style="font-variation-settings: 'FILL' 1;">favorite</span>
+                    <span>for surviving hostel life</span>
+                </div>
+                <span class="font-label-sm text-label-sm text-outline">PayYaar · Zero awkward kharcha talks with your roomies ✨</span>
+            </div>
 
         </div>
+    </main>
 
-        <button
-            class="nav-btn"
-            onclick="scrollToDashboard()">
-
-            Get Started
-
-        </button>
-
+    <!-- BOTTOM FLOATING NAVIGATION BAR -->
+    <nav class="fixed bottom-0 w-full z-50 pb-safe bg-surface/90 backdrop-blur-xl shadow-[0_-2px_12px_rgba(19,27,46,0.08)] border-t border-surface-container-high">
+        <div class="relative flex items-center justify-around h-16 px-space-xs max-w-lg mx-auto" id="bottomNavLinks">
+            <a href="#dashboard-top" onclick="setActiveNav(this)" class="nav-item active flex flex-col items-center justify-center min-w-[56px] h-14 transition-colors text-primary font-bold">
+                <span class="material-symbols-outlined text-[22px]">dashboard</span>
+                <span class="font-label-sm text-label-sm mt-0.5">Home</span>
+            </a>
+            <a href="#quickSettleUp" onclick="setActiveNav(this)" class="nav-item flex flex-col items-center justify-center min-w-[56px] h-14 text-on-surface-variant transition-colors hover:text-primary">
+                <span class="material-symbols-outlined text-[22px]">group</span>
+                <span class="font-label-sm text-label-sm mt-0.5">Roommates</span>
+            </a>
+            <div class="relative -top-5 flex flex-col items-center">
+                <button aria-label="Add Expense" onclick="scrollToSection('quickAddExpense'); focusAddExpense();" class="w-14 h-14 rounded-full bg-primary text-on-primary flex items-center justify-center shadow-[0_8px_20px_rgba(70,72,212,0.35)] active:scale-95 hover:scale-105 transition-transform">
+                    <span class="material-symbols-outlined text-[28px]">add</span>
+                </button>
+                <span class="font-label-sm text-label-sm text-on-surface-variant mt-1">Split</span>
+            </div>
+            <a href="#expenseHistory" onclick="setActiveNav(this)" class="nav-item flex flex-col items-center justify-center min-w-[56px] h-14 text-on-surface-variant transition-colors hover:text-primary">
+                <span class="material-symbols-outlined text-[22px]">receipt_long</span>
+                <span class="font-label-sm text-label-sm mt-0.5">Activity</span>
+            </a>
+            <a href="#quickSettleUp" onclick="setActiveNav(this)" class="nav-item flex flex-col items-center justify-center min-w-[56px] h-14 text-on-surface-variant transition-colors hover:text-primary">
+                <span class="material-symbols-outlined text-[22px]">account_balance_wallet</span>
+                <span class="font-label-sm text-label-sm mt-0.5">Settle</span>
+            </a>
+        </div>
     </nav>
 
-    <!-- BACKGROUND BLOBS -->
-
-    <div class="background">
-
-        <div class="blob blob1"></div>
-
-        <div class="blob blob2"></div>
-
-    </div>
-
-    <!-- STATS SECTION -->
-
-    <div class="stats-container">
-
-        <div class="stat-card">
-
-            <h3>💸 Total Expenses</h3>
-
-            <h1 id="totalExpenses">
-                ₹0
-            </h1>
-
-        </div>
-
-        <div class="stat-card">
-
-            <h3>👯 Friends</h3>
-
-            <h1 id="friendCount">
-                0
-            </h1>
-
-        </div>
-
-        <div class="stat-card">
-
-            <h3>📜 Transactions</h3>
-
-            <h1 id="transactionCount">
-                0
-            </h1>
-
-        </div>
-
-    </div>
-
-    <!-- HERO SECTION -->
-
-    <section class="hero">
-
-        <div class="hero-text">
-
-            <h1>
-                Split hostel expenses
-                <br>
-                without awkwardness
-            </h1>
-
-            <p>
-                Track expenses, split bills,
-                and manage hostel payments
-                beautifully with your yaar.
-            </p>
-
+    <!-- INTERACTIVE MODAL: SETTLE UP via UPI -->
+    <div id="upiSettleModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-on-surface/40 backdrop-blur-sm animate-fade-in">
+        <div class="bg-surface-container-lowest rounded-2xl p-6 max-w-sm w-full shadow-2xl space-y-4 border border-outline-variant/30">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-tertiary text-[24px]">contactless</span>
+                    <h3 class="font-headline-sm text-headline-sm font-bold text-on-surface">Settle via UPI</h3>
+                </div>
+                <button onclick="closeModal('upiSettleModal')" class="w-8 h-8 rounded-full bg-surface-container text-on-surface-variant flex items-center justify-center hover:bg-surface-container-high">×</button>
+            </div>
             
-
-        </div>
-
-    </section>
-
-    <!-- DASHBOARD -->
-
-    <section class="dashboard" id="dashboard">
-
-        <h2 class="section-title">
-            Dashboard
-        </h2>
-
-        <!-- TOTAL EXPENSES CARD -->
-
-        <div class="total-card">
-
-            <h3>Total Group Expenses</h3>
-
-            <h1 id="totalExpenses">
-                ₹0
-            </h1>
-
-        </div>
-
-    </section>
-
-    <!-- GROUPS & EXPENSES -->
-
-    <section class="groups-expenses">
-
-        <!-- GROUP CARD -->
-
-        <div class="group-card">
-
-            <h3>🏡 Expense Group</h3>
-
-            <input
-                type="text"
-                id="groupName"
-                placeholder="Enter group name">
-
-            <button
-                class="group-btn"
-                onclick="createGroup()">
-
-                ✨ Create Group
-
-            </button>
-
-            <h2 id="currentGroup"></h2>
-
-        </div>
-
-        <!-- BUDGET CARD -->
-
-        <div class="budget-card">
-
-            <h3>💰 Set Group Budget</h3>
-
-            <input
-                type="number"
-                id="budgetInput"
-                placeholder="Enter budget limit">
-
-            <button
-                class="budget-btn"
-                onclick="setBudget()">
-
-                💜 Set Budget
-
-            </button>
-
-            <h2 id="budgetDisplay">
-                Budget: ₹0
-            </h2>
-
-            <p id="budgetWarning"></p>
-
-            <div class="progress-container">
-
-                <div id="progressBar"></div>
-
+            <div class="p-3 rounded-xl bg-surface-container-low space-y-1" id="upiModalContent">
+                <!-- Filled dynamically -->
             </div>
 
+            <div class="space-y-2">
+                <label class="font-label-md text-label-md text-on-surface-variant font-medium block">Choose Payment App:</label>
+                <div class="grid grid-cols-2 gap-2">
+                    <button onclick="confirmUPISettle('Google Pay')" class="p-2.5 rounded-xl bg-surface-container hover:bg-primary-container hover:text-on-primary text-on-surface font-label-md text-label-md font-semibold flex items-center gap-2 border border-outline-variant/20 transition-all">
+                        <span class="text-lg">📱</span> Google Pay
+                    </button>
+                    <button onclick="confirmUPISettle('PhonePe')" class="p-2.5 rounded-xl bg-surface-container hover:bg-primary-container hover:text-on-primary text-on-surface font-label-md text-label-md font-semibold flex items-center gap-2 border border-outline-variant/20 transition-all">
+                        <span class="text-lg">🟣</span> PhonePe
+                    </button>
+                    <button onclick="confirmUPISettle('Paytm')" class="p-2.5 rounded-xl bg-surface-container hover:bg-primary-container hover:text-on-primary text-on-surface font-label-md text-label-md font-semibold flex items-center gap-2 border border-outline-variant/20 transition-all">
+                        <span class="text-lg">🔵</span> Paytm UPI
+                    </button>
+                    <button onclick="confirmUPISettle('Cash')" class="p-2.5 rounded-xl bg-surface-container hover:bg-primary-container hover:text-on-primary text-on-surface font-label-md text-label-md font-semibold flex items-center gap-2 border border-outline-variant/20 transition-all">
+                        <span class="text-lg">💵</span> Cash Payment
+                    </button>
+                </div>
+            </div>
         </div>
+    </div>
 
-        <!-- ADD FRIEND CARD -->
-
-        <div class="card">
-
-            <h3>👯 Add Friend</h3>
-
-            <input
-                type="text"
-                id="friendInput"
-                placeholder="Enter friend name">
-
-            <button onclick="addFriend()">
-                Add Friend
-            </button>
-
-            <ul id="friendList"></ul>
-
+    <!-- INTERACTIVE MODAL: NOTIFICATIONS -->
+    <div id="notificationsModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-on-surface/40 backdrop-blur-sm animate-fade-in">
+        <div class="bg-surface-container-lowest rounded-2xl p-6 max-w-sm w-full shadow-2xl space-y-4 border border-outline-variant/30">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary text-[24px]">notifications</span>
+                    <h3 class="font-headline-sm text-headline-sm font-bold text-on-surface">Room Notifications</h3>
+                </div>
+                <button onclick="closeModal('notificationsModal')" class="w-8 h-8 rounded-full bg-surface-container text-on-surface-variant flex items-center justify-center hover:bg-surface-container-high">×</button>
+            </div>
+            
+            <div class="space-y-2">
+                <div class="p-3 rounded-xl bg-surface-container-low flex items-start gap-2.5">
+                    <span class="text-lg">🍜</span>
+                    <div>
+                        <span class="font-label-md text-label-md font-bold text-on-surface block">Maggi Split Updated</span>
+                        <span class="font-body-sm text-[12px] text-on-surface-variant">Rohit Sharma added ₹640 exam fuel split.</span>
+                    </div>
+                </div>
+                <div class="p-3 rounded-xl bg-surface-container-low flex items-start gap-2.5">
+                    <span class="text-lg">📶</span>
+                    <div>
+                        <span class="font-label-md text-label-md font-bold text-on-surface block">Wi-Fi Booster Pack Active</span>
+                        <span class="font-body-sm text-[12px] text-on-surface-variant">500GB high speed pot active for Room 304.</span>
+                    </div>
+                </div>
+            </div>
+            
+            <button onclick="closeModal('notificationsModal')" class="w-full h-10 rounded-xl bg-primary text-on-primary font-label-md text-label-md font-semibold">Close</button>
         </div>
+    </div>
 
-        <!-- ADD EXPENSE CARD -->
-
-        <div class="card">
-
-            <h3>💰 Add Expense</h3>
-
-            <input
-                type="text"
-                id="expenseTitle"
-                placeholder="Expense title">
-
-            <input
-                type="number"
-                id="expenseAmount"
-                placeholder="Amount">
-
-           <!-- WHO PAID -->
-
-<select id="paidBy">
-
-    <option value="">
-        Select who paid
-    </option>
-
-</select>
-
-<!-- SPLIT BETWEEN -->
-
-<p class="split-title">
-    To be split between
-</p>
-
-
-
-
-<div id="splitPeople"></div>
-
-            <button onclick="addExpense()">
-                Add Expense
-            </button>
-
-        </div>
-
-        <!-- EXPENSE HISTORY -->
-
-        <div class="card">
-
-            <h3>📜 Expense History</h3>
-
-            <div id="expenseList">
-
-                <p class="empty-text">
-                    No expenses added yet ✨
-                </p>
-
+    <!-- INTERACTIVE MODAL: PROFILE & ROOM -->
+    <div id="profileModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-on-surface/40 backdrop-blur-sm animate-fade-in">
+        <div class="bg-surface-container-lowest rounded-2xl p-6 max-w-sm w-full shadow-2xl space-y-4 border border-outline-variant/30">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary text-[24px]">account_circle</span>
+                    <h3 class="font-headline-sm text-headline-sm font-bold text-on-surface">Your Profile</h3>
+                </div>
+                <button onclick="closeModal('profileModal')" class="w-8 h-8 rounded-full bg-surface-container text-on-surface-variant flex items-center justify-center hover:bg-surface-container-high">×</button>
+            </div>
+            
+            <div class="text-center space-y-2 py-2">
+                <div class="w-16 h-16 rounded-full bg-primary text-on-primary mx-auto flex items-center justify-center text-2xl font-bold">A</div>
+                <div>
+                    <h4 class="font-headline-sm text-headline-sm font-bold text-on-surface">Aman (Room Lead)</h4>
+                    <p class="font-label-sm text-label-sm text-on-surface-variant">Room 304, Block B · Ganga Wing</p>
+                </div>
             </div>
 
+            <div class="space-y-2 pt-1">
+                <button onclick="promptSetBudget(); closeModal('profileModal');" class="w-full p-2.5 rounded-xl bg-surface-container-low hover:bg-surface-container text-on-surface font-label-md text-label-md font-semibold text-left flex items-center justify-between">
+                    <span>Set Monthly Room Budget</span>
+                    <span class="material-symbols-outlined text-[18px]">chevron_right</span>
+                </button>
+                <button onclick="resetAllDataConfirm()" class="w-full p-2.5 rounded-xl bg-error-container/40 hover:bg-error-container text-error font-label-md text-label-md font-semibold text-left flex items-center justify-between">
+                    <span>Reset All Room Data</span>
+                    <span class="material-symbols-outlined text-[18px]">restart_alt</span>
+                </button>
+            </div>
         </div>
+    </div>
 
-        <div class="card">
+    <!-- TOAST NOTIFICATION CONTAINER -->
+    <div id="toastContainer" class="fixed top-20 right-4 z-50 flex flex-col space-y-2 pointer-events-none"></div>
 
-            <h3>💸 Balances</h3>
-
-            <div id="balances"></div>
-
-        </div>
-
-    </section>
-
-    <footer>
-
-        Made with 💜 for hostel life
-
-    </footer>
-    <script type="module">
-
-import { initializeApp }
-from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-
-import {
-
-    getFirestore,
-
-    collection,
-
-    addDoc
-
-}
-
-from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-const firebaseConfig = {
-
-    apiKey: "AIzaSyAf8zLED_NjsDzV-Ode37loWrxcXdPAUhY",
-
-    authDomain: "payyaar-23dde.firebaseapp.com",
-
-    projectId: "payyaar-23dde",
-
-    storageBucket: "payyaar-23dde.firebasestorage.app",
-
-    messagingSenderId: "472162459054",
-
-    appId: "1:472162459054:web:c195d20723d8592f52bc3f",
-
-    measurementId: "G-QT222GHG6L"
-};
-
-const app =
-initializeApp(firebaseConfig);
-
-const db =
-getFirestore(app);
-
-console.log("Firebase Connected 🚀");
-
-// MAKE FUNCTION GLOBAL
-
-window.createGroup =
-async function() {
-
-    const groupInput =
-        document.getElementById("groupName");
-
-    const groupName =
-        groupInput.value;
-
-    if(groupName === "") {
-
-        alert("Enter group name");
-
-        return;
-    }
-
-    try {
-
-        const docRef =
-            await addDoc(
-
-                collection(db, "groups"),
-
-                {
-
-                    name: groupName,
-
-                    createdAt:
-                    new Date()
-                }
-            );
-
-        document.getElementById(
-            "currentGroup"
-        ).innerText = groupName;
-
-        alert(
-            "Group Created 🎉"
-        );
-
-        console.log(
-            "Document ID:",
-            docRef.id
-        );
-
-        groupInput.value = "";
-
-    }
-
-    catch(error) {
-
-        console.error(error);
-
-        alert(
-            "Error creating group"
-        );
-    }
-};
-
-</script>
-    <script src="script.js"></script>
-
+    <script src="script.js?v=2.0"></script>
 </body>
-
 </html>
