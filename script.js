@@ -1,208 +1,28 @@
-// PayYaar Hostel OS - State Engine & Hostel Management Layer
+// PayYaar Hostel OS - Authentication Layer & Clean State Engine
 
-let friends = ["You", "Rahul", "Aman", "Karan"];
+let currentUser = null;
+let friends = [];
 let expenses = [];
 let stock = [];
-let wallet = { balance: 2000, contributions: [], expenses: [] };
+let wallet = { balance: 0, contributions: [], expenses: [] };
 let ious = [];
 let bills = [];
 let activityFeed = [];
-let roomBudget = 20000;
+let roomBudget = 0;
 
 let currentMainTab = "home";
 let currentHostelSubTab = "overview";
 let activeStockItemToUse = null;
 let activeIOUFilter = "All";
 
-// Default Initial Data for Room 204
-const DEFAULT_FRIENDS = ["You", "Rahul", "Aman", "Karan"];
-
-const DEFAULT_EXPENSES = [
-  {
-    id: 101,
-    title: "Late Night Maggi & Chai Stash",
-    amount: 640,
-    paidBy: "You",
-    category: "Food & Mess",
-    splitBetween: ["You", "Rahul", "Aman", "Karan"],
-    date: "Today, 01:15 AM",
-    tag: "Exam Week Fuel ☕"
-  },
-  {
-    id: 102,
-    title: "Hostel Wi-Fi Booster Pack (500GB)",
-    amount: 999,
-    paidBy: "Rahul",
-    category: "Wi-Fi & Bills",
-    splitBetween: ["You", "Rahul", "Aman", "Karan"],
-    date: "Yesterday",
-    tag: "Speed Boost ⚡"
-  },
-  {
-    id: 103,
-    title: "Midnight Biryani / Zomato Raid",
-    amount: 1680,
-    paidBy: "Aman",
-    category: "Food & Mess",
-    splitBetween: ["You", "Rahul", "Aman", "Karan"],
-    date: "2 days ago",
-    tag: "Mess Replacement 🍜"
-  },
-  {
-    id: 104,
-    title: "Quarterly Water Can & Cooler Rent",
-    amount: 1920,
-    paidBy: "Karan",
-    category: "Rent & Maid",
-    splitBetween: ["You", "Rahul", "Aman", "Karan"],
-    date: "3 days ago",
-    tag: "Hostel Essential 🚰"
-  }
-];
-
-const DEFAULT_STOCK = [
-  {
-    id: 1,
-    name: "Milk",
-    icon: "🥛",
-    quantity: 4,
-    unit: "packets",
-    totalCost: 240,
-    purchasedBy: "Rahul",
-    sharedBy: "Room 204",
-    lowAlert: 2,
-    history: [{ person: "Aman", qty: 1, date: "30m ago" }]
-  },
-  {
-    id: 2,
-    name: "Maggi",
-    icon: "🍜",
-    quantity: 8,
-    unit: "packets",
-    totalCost: 112,
-    purchasedBy: "Aman",
-    sharedBy: "Room 204",
-    lowAlert: 3,
-    history: [{ person: "You", qty: 2, date: "Yesterday" }]
-  },
-  {
-    id: 3,
-    name: "Detergent & Supplies",
-    icon: "🧴",
-    quantity: 20,
-    unit: "% remaining",
-    totalCost: 180,
-    purchasedBy: "Karan",
-    sharedBy: "Room 204",
-    lowAlert: 25,
-    history: []
-  },
-  {
-    id: 4,
-    name: "20L Water Can",
-    icon: "🚰",
-    quantity: 2,
-    unit: "cans",
-    totalCost: 90,
-    purchasedBy: "You",
-    sharedBy: "Room 204",
-    lowAlert: 1,
-    history: []
-  },
-  {
-    id: 5,
-    name: "Chai & Sugar Stash",
-    icon: "☕",
-    quantity: 500,
-    unit: "grams",
-    totalCost: 140,
-    purchasedBy: "Rahul",
-    sharedBy: "Room 204",
-    lowAlert: 100,
-    history: []
-  }
-];
-
-const DEFAULT_WALLET = {
-  balance: 2000,
-  contributions: [
-    { id: 1, person: "You", amount: 500, date: "Sep 1" },
-    { id: 2, person: "Rahul", amount: 500, date: "Sep 1" },
-    { id: 3, person: "Aman", amount: 500, date: "Sep 1" },
-    { id: 4, person: "Karan", amount: 500, date: "Sep 1" }
-  ],
-  expenses: [
-    { id: 1, title: "Hostel Maid & Deep Cleaning", amount: 400, paidBy: "Wallet Pool", date: "Sep 5" }
-  ]
-};
-
-const DEFAULT_IOUS = [
-  {
-    id: 1,
-    type: "Money",
-    person: "Aman",
-    itemOrAmount: "₹200",
-    description: "Canteen chai & samosa loan",
-    status: "Pending",
-    dueDate: "Tomorrow",
-    date: "Sep 10"
-  },
-  {
-    id: 2,
-    type: "Item",
-    person: "Rahul",
-    itemOrAmount: "Type-C Charger",
-    description: "Borrowed for lab assignment",
-    status: "Pending",
-    dueDate: "Friday",
-    date: "Sep 11"
-  },
-  {
-    id: 3,
-    type: "Food",
-    person: "Karan",
-    itemOrAmount: "2 Maggi Packets",
-    description: "Midnight study craving borrow",
-    status: "Pending",
-    dueDate: "Sunday",
-    date: "Sep 12"
-  }
-];
-
-const DEFAULT_BILLS = [
-  {
-    id: 1,
-    title: "📶 Wi-Fi Booster Pack (500GB)",
-    amount: 600,
-    dueDate: "5th of month",
-    status: "Upcoming",
-    category: "Wi-Fi & Bills"
-  },
-  {
-    id: 2,
-    title: "🧹 Hostel Maid & Cleaning",
-    amount: 400,
-    dueDate: "Every Friday",
-    status: "Upcoming",
-    category: "Rent & Maid"
-  },
-  {
-    id: 3,
-    title: "🚰 20L Water Can Refill Pot",
-    amount: 180,
-    dueDate: "10th of month",
-    status: "Paid",
-    category: "Groceries"
-  }
-];
-
-const DEFAULT_ACTIVITY = [
-  { id: 1, text: "Rahul added ₹240 Milk to Common Stock", time: "10m ago", icon: "🥛" },
-  { id: 2, text: "Aman used 1 Milk packet", time: "30m ago", icon: "🍵" },
-  { id: 3, text: "You paid ₹600 Wi-Fi bill", time: "2h ago", icon: "📶" },
-  { id: 4, text: "Karan contributed ₹500 to Room Wallet", time: "5h ago", icon: "💳" },
-  { id: 5, text: "Rahul settled ₹150 with You", time: "1d ago", icon: "🤝" }
-];
+// Default clean initial state (Zero dummy data)
+const DEFAULT_FRIENDS = [];
+const DEFAULT_EXPENSES = [];
+const DEFAULT_STOCK = [];
+const DEFAULT_WALLET = { balance: 0, contributions: [], expenses: [] };
+const DEFAULT_IOUS = [];
+const DEFAULT_BILLS = [];
+const DEFAULT_ACTIVITY = [];
 
 // Helper: Unique list
 function getUniquePeople(people) {
@@ -216,44 +36,206 @@ function getUniquePeople(people) {
   });
 }
 
-// ==================== INITIALIZATION ====================
+// ==================== INITIALIZATION & AUTH ====================
 
 window.addEventListener("DOMContentLoaded", () => {
+  purgeLegacyDummyData();
+  checkAuthUser();
   loadStoredData();
   renderAllComponents();
 });
 
+function purgeLegacyDummyData() {
+  // Purge any cached legacy dummy data from earlier sessions
+  const keysToInspect = ["payyaar_expenses", "payyaar_friends", "payyaar_v4_expenses", "payyaar_v4_friends", "payyaar_v4_stock"];
+  keysToInspect.forEach(key => {
+    const val = localStorage.getItem(key) || "";
+    if (val.includes("Midnight Maggi") || val.includes("Rohit") || val.includes("Vikram") || val.includes("20000") || val.includes("Aman (You)")) {
+      localStorage.removeItem(key);
+    }
+  });
+}
+
+function checkAuthUser() {
+  const savedUser = localStorage.getItem("payyaar_v5_user");
+  const loginView = document.getElementById("loginView");
+
+  if (savedUser) {
+    currentUser = JSON.parse(savedUser);
+    if (loginView) loginView.classList.add("hidden");
+    updateUserProfileDisplays();
+  } else {
+    currentUser = null;
+    if (loginView) loginView.classList.remove("hidden");
+  }
+}
+
+function switchAuthTab(tab) {
+  const loginForm = document.getElementById("loginForm");
+  const signUpForm = document.getElementById("signUpForm");
+  const tabLogin = document.getElementById("authTabLogin");
+  const tabSignUp = document.getElementById("authTabSignUp");
+
+  if (tab === "login") {
+    if (loginForm) loginForm.classList.remove("hidden");
+    if (signUpForm) signUpForm.classList.add("hidden");
+    if (tabLogin) tabLogin.className = "py-2.5 rounded-xl font-headline-sm text-xs font-bold bg-surface-container-lowest text-primary shadow-xs transition-all";
+    if (tabSignUp) tabSignUp.className = "py-2.5 rounded-xl font-headline-sm text-xs font-medium text-on-surface-variant hover:text-on-surface transition-all";
+  } else {
+    if (signUpForm) signUpForm.classList.remove("hidden");
+    if (loginForm) loginForm.classList.add("hidden");
+    if (tabSignUp) tabSignUp.className = "py-2.5 rounded-xl font-headline-sm text-xs font-bold bg-surface-container-lowest text-primary shadow-xs transition-all";
+    if (tabLogin) tabLogin.className = "py-2.5 rounded-xl font-headline-sm text-xs font-medium text-on-surface-variant hover:text-on-surface transition-all";
+  }
+}
+
+function handleLoginSubmit() {
+  const emailInput = document.getElementById("loginEmail");
+  const email = emailInput ? emailInput.value.trim() : "user@hostel.edu";
+  const name = email.split("@")[0] || "You";
+
+  currentUser = {
+    name: name.charAt(0).toUpperCase() + name.slice(1),
+    email: email,
+    room: "Block B · Room 204"
+  };
+
+  localStorage.setItem("payyaar_v5_user", JSON.stringify(currentUser));
+  checkAuthUser();
+
+  // Add self to room if friends list is empty
+  if (!friends.includes(currentUser.name)) {
+    friends.unshift(currentUser.name);
+    saveData();
+  }
+
+  renderAllComponents();
+  showToast(`Welcome back, ${currentUser.name}! 👋`, "success");
+}
+
+function handleSignUpSubmit() {
+  const nameInput = document.getElementById("signUpName");
+  const emailInput = document.getElementById("signUpEmail");
+  const roomInput = document.getElementById("signUpRoom");
+
+  const name = nameInput ? nameInput.value.trim() : "You";
+  const email = emailInput ? emailInput.value.trim() : "user@hostel.edu";
+  const room = roomInput && roomInput.value.trim() !== "" ? roomInput.value.trim() : "Block B · Room 204";
+
+  currentUser = {
+    name: name,
+    email: email,
+    room: room
+  };
+
+  localStorage.setItem("payyaar_v5_user", JSON.stringify(currentUser));
+  checkAuthUser();
+
+  if (!friends.includes(currentUser.name)) {
+    friends.unshift(currentUser.name);
+    saveData();
+  }
+
+  renderAllComponents();
+  showToast(`Account created! Welcome to ${room}, ${currentUser.name}! 🎉`, "success");
+}
+
+function handleDemoLogin() {
+  currentUser = {
+    name: "Student (You)",
+    email: "student@hostel.edu",
+    room: "Hostel Room Ledger"
+  };
+
+  localStorage.setItem("payyaar_v5_user", JSON.stringify(currentUser));
+  checkAuthUser();
+
+  if (!friends.includes(currentUser.name)) {
+    friends.unshift(currentUser.name);
+    saveData();
+  }
+
+  renderAllComponents();
+  showToast("Demo Sign-In Successful! 🚀", "success");
+}
+
+function handleLogout() {
+  if (confirm("Sign out of PayYaar?")) {
+    localStorage.removeItem("payyaar_v5_user");
+    checkAuthUser();
+    showToast("Signed out successfully", "info");
+  }
+}
+
+function updateUserProfileDisplays() {
+  if (!currentUser) return;
+
+  const initial = currentUser.name.charAt(0).toUpperCase();
+
+  const profileAvatarBig = document.getElementById("profileAvatarBig");
+  if (profileAvatarBig) profileAvatarBig.innerText = initial;
+
+  const modalProfileAvatar = document.getElementById("modalProfileAvatar");
+  if (modalProfileAvatar) modalProfileAvatar.innerText = initial;
+
+  const profileUserName = document.getElementById("profileUserName");
+  if (profileUserName) profileUserName.innerText = currentUser.name;
+
+  const modalProfileName = document.getElementById("modalProfileName");
+  if (modalProfileName) modalProfileName.innerText = currentUser.name;
+
+  const profileUserRoom = document.getElementById("profileUserRoom");
+  if (profileUserRoom) profileUserRoom.innerText = `🏠 ${currentUser.room} · Shared Ledger`;
+
+  const modalProfileRoom = document.getElementById("modalProfileRoom");
+  if (modalProfileRoom) modalProfileRoom.innerText = `🏠 ${currentUser.room}`;
+
+  const headerRoomText = document.getElementById("headerRoomText");
+  if (headerRoomText) headerRoomText.innerText = `🏠 ${currentUser.room}`;
+
+  const headerRoomLabel = document.getElementById("headerRoomLabel");
+  if (headerRoomLabel) headerRoomLabel.innerText = currentUser.room.split("·")[1] || currentUser.room;
+
+  const homeRoomTitle = document.getElementById("homeRoomTitle");
+  if (homeRoomTitle) homeRoomTitle.innerText = `🏠 ${currentUser.room} · Shared Ledger`;
+
+  const hostelRoomHeading = document.getElementById("hostelRoomHeading");
+  if (hostelRoomHeading) hostelRoomHeading.innerText = currentUser.room;
+}
+
+// ==================== STORAGE & COMPONENT RENDERERS ====================
+
 function loadStoredData() {
-  const savedFriends = localStorage.getItem("payyaar_v4_friends");
+  const savedFriends = localStorage.getItem("payyaar_v5_friends");
   friends = savedFriends ? getUniquePeople(JSON.parse(savedFriends)) : [...DEFAULT_FRIENDS];
 
-  const savedExpenses = localStorage.getItem("payyaar_v4_expenses");
+  const savedExpenses = localStorage.getItem("payyaar_v5_expenses");
   expenses = savedExpenses ? JSON.parse(savedExpenses) : [...DEFAULT_EXPENSES];
 
-  const savedStock = localStorage.getItem("payyaar_v4_stock");
+  const savedStock = localStorage.getItem("payyaar_v5_stock");
   stock = savedStock ? JSON.parse(savedStock) : [...DEFAULT_STOCK];
 
-  const savedWallet = localStorage.getItem("payyaar_v4_wallet");
+  const savedWallet = localStorage.getItem("payyaar_v5_wallet");
   wallet = savedWallet ? JSON.parse(savedWallet) : { ...DEFAULT_WALLET };
 
-  const savedIOUs = localStorage.getItem("payyaar_v4_ious");
+  const savedIOUs = localStorage.getItem("payyaar_v5_ious");
   ious = savedIOUs ? JSON.parse(savedIOUs) : [...DEFAULT_IOUS];
 
-  const savedBills = localStorage.getItem("payyaar_v4_bills");
+  const savedBills = localStorage.getItem("payyaar_v5_bills");
   bills = savedBills ? JSON.parse(savedBills) : [...DEFAULT_BILLS];
 
-  const savedActivity = localStorage.getItem("payyaar_v4_activity");
+  const savedActivity = localStorage.getItem("payyaar_v5_activity");
   activityFeed = savedActivity ? JSON.parse(savedActivity) : [...DEFAULT_ACTIVITY];
 }
 
 function saveData() {
-  localStorage.setItem("payyaar_v4_friends", JSON.stringify(friends));
-  localStorage.setItem("payyaar_v4_expenses", JSON.stringify(expenses));
-  localStorage.setItem("payyaar_v4_stock", JSON.stringify(stock));
-  localStorage.setItem("payyaar_v4_wallet", JSON.stringify(wallet));
-  localStorage.setItem("payyaar_v4_ious", JSON.stringify(ious));
-  localStorage.setItem("payyaar_v4_bills", JSON.stringify(bills));
-  localStorage.setItem("payyaar_v4_activity", JSON.stringify(activityFeed));
+  localStorage.setItem("payyaar_v5_friends", JSON.stringify(friends));
+  localStorage.setItem("payyaar_v5_expenses", JSON.stringify(expenses));
+  localStorage.setItem("payyaar_v5_stock", JSON.stringify(stock));
+  localStorage.setItem("payyaar_v5_wallet", JSON.stringify(wallet));
+  localStorage.setItem("payyaar_v5_ious", JSON.stringify(ious));
+  localStorage.setItem("payyaar_v5_bills", JSON.stringify(bills));
+  localStorage.setItem("payyaar_v5_activity", JSON.stringify(activityFeed));
 }
 
 function renderAllComponents() {
@@ -269,12 +251,10 @@ function renderAllComponents() {
 function switchMainTab(tabName) {
   currentMainTab = tabName;
 
-  // Toggle main section visibility
   document.querySelectorAll(".main-view").forEach(v => v.classList.add("hidden"));
   const activeSec = document.getElementById(`mainView-${tabName}`);
   if (activeSec) activeSec.classList.remove("hidden");
 
-  // Update navbar button highlights
   document.querySelectorAll(".main-tab-btn, .mobile-tab-btn").forEach(b => {
     b.classList.remove("text-primary", "font-bold", "active");
     b.classList.add("text-on-surface-variant");
@@ -286,7 +266,6 @@ function switchMainTab(tabName) {
   const mobBtn = document.getElementById(`mobileTabNav-${tabName}`);
   if (mobBtn) mobBtn.classList.add("text-primary", "font-bold", "active");
 
-  // Refresh active tab views
   if (tabName === "home") renderHomeView();
   if (tabName === "hostel") renderHostelView();
   if (tabName === "expenses") renderExpensesView();
@@ -324,7 +303,11 @@ function populateSelectDropdowns() {
     if (!el) return;
     const curr = el.value;
     el.innerHTML = "";
-    friends.forEach(f => {
+
+    const userPerson = currentUser ? currentUser.name : "You";
+    const peopleList = getUniquePeople([userPerson, ...friends]);
+
+    peopleList.forEach(f => {
       const sel = f === curr ? "selected" : "";
       el.innerHTML += `<option value="${f}" ${sel}>${f}</option>`;
     });
@@ -338,12 +321,16 @@ function renderHomeView() {
   const avRow = document.getElementById("homeAvatarsRow");
   if (avRow) {
     avRow.innerHTML = "";
-    const bgColors = ["bg-primary-container text-on-primary-container", "bg-secondary-container text-on-secondary-container", "bg-tertiary text-on-tertiary", "bg-surface-container-highest text-on-surface"];
-    friends.forEach((f, idx) => {
-      const initial = f.charAt(0).toUpperCase();
-      const color = bgColors[idx % bgColors.length];
-      avRow.innerHTML += `<div class="w-8 h-8 rounded-full ${color} flex items-center justify-center font-label-md text-xs font-bold shadow-xs ring-2 ring-surface" title="${f}">${initial}</div>`;
-    });
+    if (friends.length === 0) {
+      avRow.innerHTML = `<span class="text-xs text-on-surface-variant font-medium">No Members</span>`;
+    } else {
+      const bgColors = ["bg-primary-container text-on-primary-container", "bg-secondary-container text-on-secondary-container", "bg-tertiary text-on-tertiary", "bg-surface-container-highest text-on-surface"];
+      friends.forEach((f, idx) => {
+        const initial = f.charAt(0).toUpperCase();
+        const color = bgColors[idx % bgColors.length];
+        avRow.innerHTML += `<div class="w-8 h-8 rounded-full ${color} flex items-center justify-center font-label-md text-xs font-bold shadow-xs ring-2 ring-surface" title="${f}">${initial}</div>`;
+      });
+    }
   }
 
   const activeBadge = document.getElementById("homeActiveYaarsBadge");
@@ -357,20 +344,28 @@ function renderHomeView() {
   const homeTotalBadge = document.getElementById("homeTotalBadge");
   if (homeTotalBadge) homeTotalBadge.innerText = `₹${totalSpent.toLocaleString()} total`;
 
-  // Calculate Net Share
+  // Net Share
   const netBalances = calculateNetBalances();
-  const youNet = netBalances["You"] || 0;
+  const meName = currentUser ? currentUser.name : "You";
+  const myNet = netBalances[meName] || 0;
+
   const homeNetShare = document.getElementById("homeNetShare");
   const homeNetStatus = document.getElementById("homeNetStatus");
 
-  if (youNet >= 0) {
-    if (homeNetShare) homeNetShare.innerText = `₹${Math.round(youNet).toLocaleString()}`;
+  if (expenses.length === 0) {
+    if (homeNetShare) homeNetShare.innerText = "₹0";
+    if (homeNetStatus) {
+      homeNetStatus.className = "font-label-sm text-xs text-primary-fixed font-medium truncate";
+      homeNetStatus.innerText = "No Dues";
+    }
+  } else if (myNet >= 0) {
+    if (homeNetShare) homeNetShare.innerText = `₹${Math.round(myNet).toLocaleString()}`;
     if (homeNetStatus) {
       homeNetStatus.className = "font-label-sm text-xs text-tertiary-fixed font-medium truncate";
-      homeNetStatus.innerText = `+₹${Math.round(youNet).toLocaleString()} lent`;
+      homeNetStatus.innerText = `+₹${Math.round(myNet).toLocaleString()} lent`;
     }
   } else {
-    const absNet = Math.abs(youNet);
+    const absNet = Math.abs(myNet);
     if (homeNetShare) homeNetShare.innerText = `₹${Math.round(absNet).toLocaleString()}`;
     if (homeNetStatus) {
       homeNetStatus.className = "font-label-sm text-xs text-error-container font-medium truncate";
@@ -378,7 +373,7 @@ function renderHomeView() {
     }
   }
 
-  // Room Wallet Summary
+  // Room Wallet
   const homeWalletBalance = document.getElementById("homeWalletBalance");
   if (homeWalletBalance) homeWalletBalance.innerText = `₹${wallet.balance.toLocaleString()}`;
 
@@ -387,19 +382,10 @@ function renderHomeView() {
   const homePendingIOUsCount = document.getElementById("homePendingIOUsCount");
   if (homePendingIOUsCount) homePendingIOUsCount.innerText = `${pendingIOUs.length} Active`;
 
-  // Render Roommate Balances Card
   renderRoommateBalances();
-
-  // Stock Preview
   renderHomeStockPreview();
-
-  // Bills Preview
   renderHomeBillsPreview();
-
-  // Smart Settlement
   renderSmartSettlementContainer("smartSettlementContainer", "smartSettlementBadge");
-
-  // Activity Feed
   renderHomeActivityFeed();
 }
 
@@ -407,7 +393,10 @@ function renderHomeView() {
 
 function renderHostelView() {
   const membersSummary = document.getElementById("hostelMembersSummary");
-  if (membersSummary) membersSummary.innerText = `Members: ${friends.join(", ")}`;
+  if (membersSummary) {
+    if (friends.length === 0) membersSummary.innerText = "Members: No roommates added yet";
+    else membersSummary.innerText = `Members: ${friends.join(", ")}`;
+  }
 
   const walletSummary = document.getElementById("hostelWalletSummary");
   if (walletSummary) walletSummary.innerText = `₹${wallet.balance.toLocaleString()}`;
@@ -552,9 +541,7 @@ function renderHomeStockPreview() {
   });
 }
 
-function quickUseStock(id) {
-  openUseStockModal(id);
-}
+function quickUseStock(id) { openUseStockModal(id); }
 
 function openUseStockModal(id) {
   activeStockItemToUse = stock.find(s => s.id === id);
@@ -576,12 +563,11 @@ function confirmUseStockItem() {
   }
 
   const userSelect = document.getElementById("stockUserSelect");
-  const person = userSelect ? userSelect.value : "You";
+  const person = userSelect ? userSelect.value : (currentUser ? currentUser.name : "You");
 
   activeStockItemToUse.quantity -= 1;
   activeStockItemToUse.history.unshift({ person, qty: 1, date: "Just now" });
 
-  // Add activity log
   addActivityLog(`${person} used 1 ${activeStockItemToUse.name}`, activeStockItemToUse.icon);
 
   saveData();
@@ -628,14 +614,13 @@ function handleAddStockSubmit() {
   const qty = qtyInput ? parseInt(qtyInput.value) : 1;
   const unit = unitInput && unitInput.value.trim() !== "" ? unitInput.value.trim() : "units";
   const cost = costInput ? parseFloat(costInput.value) : 0;
-  const purchasedBy = purchasedByInput ? purchasedByInput.value : "You";
+  const purchasedBy = purchasedByInput ? purchasedByInput.value : (currentUser ? currentUser.name : "You");
 
   if (!nameStr) {
     showToast("Please enter item name", "error");
     return;
   }
 
-  // Extract emoji if present, else default
   const emojiMatch = nameStr.match(/(\u00a9|\u00ae|[\u2000-\u3300]|[\ud83c-\ud83e][\udc00-\udfff])/);
   const icon = emojiMatch ? emojiMatch[0] : "📦";
   const cleanName = nameStr.replace(icon, "").trim() || nameStr;
@@ -648,7 +633,7 @@ function handleAddStockSubmit() {
     unit: unit,
     totalCost: cost,
     purchasedBy: purchasedBy,
-    sharedBy: "Room 204",
+    sharedBy: "Room Group",
     lowAlert: Math.max(1, Math.floor(qty * 0.3)),
     history: []
   };
@@ -660,7 +645,6 @@ function handleAddStockSubmit() {
   renderAllComponents();
   closeModal("addStockModal");
 
-  // Reset form
   if (nameInput) nameInput.value = "";
   if (qtyInput) qtyInput.value = "";
   if (costInput) costInput.value = "";
@@ -674,39 +658,40 @@ function renderFullWalletView() {
   const fullWalletBalance = document.getElementById("fullWalletBalance");
   if (fullWalletBalance) fullWalletBalance.innerText = `₹${wallet.balance.toLocaleString()}`;
 
-  // Contributions List
   const contributionsList = document.getElementById("walletContributionsList");
   if (contributionsList) {
     contributionsList.innerHTML = "";
+    if (friends.length === 0) {
+      contributionsList.innerHTML = `<p class="text-xs text-on-surface-variant italic">No roommates in room group.</p>`;
+    } else {
+      const totals = {};
+      friends.forEach(f => totals[f] = 0);
+      wallet.contributions.forEach(c => {
+        if (totals[c.person] === undefined) totals[c.person] = 0;
+        totals[c.person] += c.amount;
+      });
 
-    const totals = {};
-    friends.forEach(f => totals[f] = 0);
-    wallet.contributions.forEach(c => {
-      if (totals[c.person] === undefined) totals[c.person] = 0;
-      totals[c.person] += c.amount;
-    });
+      const maxContrib = Math.max(1, ...Object.values(totals));
 
-    const maxContrib = Math.max(1, ...Object.values(totals));
+      friends.forEach(f => {
+        const amt = totals[f] || 0;
+        const pct = Math.round((amt / maxContrib) * 100);
 
-    friends.forEach(f => {
-      const amt = totals[f] || 0;
-      const pct = Math.round((amt / maxContrib) * 100);
-
-      contributionsList.innerHTML += `
-        <div class="space-y-1">
-          <div class="flex items-center justify-between font-label-sm text-xs">
-            <span class="font-semibold text-on-surface">${f}</span>
-            <span class="font-bold text-tertiary">₹${amt.toLocaleString()}</span>
+        contributionsList.innerHTML += `
+          <div class="space-y-1">
+            <div class="flex items-center justify-between font-label-sm text-xs">
+              <span class="font-semibold text-on-surface">${f}</span>
+              <span class="font-bold text-tertiary">₹${amt.toLocaleString()}</span>
+            </div>
+            <div class="w-full h-2 rounded-full bg-surface-container overflow-hidden">
+              <div class="bg-tertiary h-full rounded-full transition-all duration-500" style="width: ${pct}%;"></div>
+            </div>
           </div>
-          <div class="w-full h-2 rounded-full bg-surface-container overflow-hidden">
-            <div class="bg-tertiary h-full rounded-full transition-all duration-500" style="width: ${pct}%;"></div>
-          </div>
-        </div>
-      `;
-    });
+        `;
+      });
+    }
   }
 
-  // Wallet Activity Ledger
   const activityList = document.getElementById("walletActivityList");
   if (activityList) {
     activityList.innerHTML = "";
@@ -716,8 +701,8 @@ function renderFullWalletView() {
     }
 
     const combined = [
-      ...wallet.contributions.map(c => ({ type: 'contrib', title: `${c.person} contributed`, amount: c.amount, date: c.date, icon: '💳', color: 'text-tertiary font-bold' })),
-      ...wallet.expenses.map(e => ({ type: 'expense', title: e.title, amount: e.amount, date: e.date, icon: '💸', color: 'text-error font-bold' }))
+      ...wallet.contributions.map(c => ({ id: c.id || Date.now(), type: 'contrib', title: `${c.person} contributed`, amount: c.amount, date: c.date, icon: '💳', color: 'text-tertiary font-bold' })),
+      ...wallet.expenses.map(e => ({ id: e.id || Date.now(), type: 'expense', title: e.title, amount: e.amount, date: e.date, icon: '💸', color: 'text-error font-bold' }))
     ].sort((a, b) => b.id - a.id);
 
     combined.forEach(item => {
@@ -743,7 +728,7 @@ function handleWalletContributionSubmit() {
   const contributorSelect = document.getElementById("walletContributor");
   const amountInput = document.getElementById("walletContributionAmount");
 
-  const person = contributorSelect ? contributorSelect.value : "You";
+  const person = contributorSelect ? contributorSelect.value : (currentUser ? currentUser.name : "You");
   const amount = amountInput ? parseFloat(amountInput.value) : NaN;
 
   if (isNaN(amount) || amount <= 0) {
@@ -795,7 +780,6 @@ function handlePayFromWalletSubmit() {
     date: "Just now"
   });
 
-  // Also record in main PayYaar expense ledger!
   expenses.unshift({
     id: Date.now(),
     title: `[Wallet] ${title}`,
@@ -846,11 +830,7 @@ function renderFullIOUsView() {
     return;
   }
 
-  const typeIcons = {
-    Money: "💵",
-    Item: "🔌",
-    Food: "🍜"
-  };
+  const typeIcons = { Money: "💵", Item: "🔌", Food: "🍜" };
 
   filteredIOUs.forEach(iou => {
     const isSettled = iou.status === "Settled";
@@ -925,7 +905,7 @@ function handleAddIOUSubmit() {
   const descInput = document.getElementById("iouDescription");
 
   const type = typeSelect ? typeSelect.value : "Money";
-  const person = personSelect ? personSelect.value : "Aman";
+  const person = personSelect ? personSelect.value : "Roommate";
   const itemOrAmount = itemInput ? itemInput.value.trim() : "";
   const description = descInput ? descInput.value.trim() : "";
 
@@ -1121,24 +1101,24 @@ function payHostelBill(id) {
   if (!bill) return;
 
   bill.status = "Paid";
+  const payer = currentUser ? currentUser.name : "You";
 
-  // Automatically record into main PayYaar expense ledger!
   expenses.unshift({
     id: Date.now(),
     title: bill.title,
     amount: bill.amount,
-    paidBy: "You",
+    paidBy: payer,
     category: bill.category || "Wi-Fi & Bills",
     splitBetween: [...friends],
     date: "Just now",
     tag: "Bill Paid 📶"
   });
 
-  addActivityLog(`You paid ₹${bill.amount} for ${bill.title}`, "📶");
+  addActivityLog(`${payer} paid ₹${bill.amount} for ${bill.title}`, "📶");
 
   saveData();
   renderAllComponents();
-  showToast(`Bill '${bill.title}' paid & split 4-ways! 🎉`, "success");
+  showToast(`Bill '${bill.title}' paid & split! 🎉`, "success");
 }
 
 function deleteBill(id) {
@@ -1218,6 +1198,7 @@ function renderSmartSettlementContainer(containerId, badgeId) {
   if (!container) return;
 
   const settlements = calculateSmartSettlementPlan();
+  const meName = currentUser ? currentUser.name : "You";
 
   if (badge) {
     badge.innerText = `${settlements.length} Payment${settlements.length === 1 ? '' : 's'} Settle All`;
@@ -1230,15 +1211,15 @@ function renderSmartSettlementContainer(containerId, badgeId) {
       <div class="p-4 rounded-xl bg-surface-container-low text-center space-y-1">
         <span class="text-xl block">🎉</span>
         <span class="font-headline-sm text-xs font-bold text-on-surface block">All Room Debts Clear!</span>
-        <span class="font-body-sm text-[11px] text-on-surface-variant">Sab hisaab barabar hai. No pending transfers needed!</span>
+        <span class="font-body-sm text-[11px] text-on-surface-variant">No pending transfer payments required right now.</span>
       </div>
     `;
     return;
   }
 
   settlements.forEach(item => {
-    const isYouFrom = item.from === "You";
-    const isYouTo = item.to === "You";
+    const isYouFrom = item.from === meName;
+    const isYouTo = item.to === meName;
 
     container.innerHTML += `
       <div class="p-3 rounded-xl bg-surface-container-low border border-outline-variant/15 flex items-center justify-between">
@@ -1283,10 +1264,17 @@ function renderRoommateBalances() {
   const netBalances = calculateNetBalances();
   container.innerHTML = "";
 
-  const otherFriends = friends.filter(f => f !== "You");
+  const meName = currentUser ? currentUser.name : "You";
+  const otherFriends = friends.filter(f => f !== meName);
 
   if (otherFriends.length === 0) {
-    container.innerHTML = `<p class="text-xs text-on-surface-variant italic">No other roommates added.</p>`;
+    container.innerHTML = `
+      <div class="p-5 text-center bg-surface-container-low/70 rounded-xl border border-dashed border-outline-variant/30 text-on-surface-variant my-1">
+        <span class="material-symbols-outlined text-[28px] text-outline block mb-1">group_add</span>
+        <p class="font-headline-sm text-xs font-bold text-on-surface">No Roommates Added Yet</p>
+        <p class="font-body-sm text-[11px] text-on-surface-variant mt-0.5">Add your friends below to start splitting room expenses!</p>
+      </div>
+    `;
     return;
   }
 
@@ -1313,7 +1301,7 @@ function renderRoommateBalances() {
               <span class="font-label-sm text-[10px] text-on-surface-variant bg-surface-container px-1.5 py-0.2 rounded font-medium">Roommate 🤝</span>
             </div>
             <span class="font-label-sm text-xs text-on-surface-variant truncate">
-              ${net === 0 ? "Settled / No Dues" : isOwedToYou ? `Owes you ₹${displayAmount}` : `You owe ₹${displayAmount}`}
+              ${net === 0 ? "Settled / No Dues" : isOwedToYou ? `Owes ₹${displayAmount}` : `Owes ₹${displayAmount}`}
             </span>
           </div>
         </div>
@@ -1323,7 +1311,7 @@ function renderRoommateBalances() {
             ${net === 0 ? '₹0' : isOwedToYou ? `+₹${displayAmount}` : `-₹${displayAmount}`}
           </span>
           ${net !== 0 ? (isOwedToYou ? `
-            <button onclick="nudgeRoommate('${friend}', ${displayAmount}, 'Shared Room Expense')" class="px-2.5 py-1 rounded-lg bg-primary text-on-primary font-label-sm text-xs font-semibold shadow-2xs active:scale-95 transition-all flex items-center gap-1 hover:bg-secondary">
+            <button onclick="nudgeRoommate('${friend}', ${displayAmount}, 'Shared Expense')" class="px-2.5 py-1 rounded-lg bg-primary text-on-primary font-label-sm text-xs font-semibold shadow-2xs active:scale-95 transition-all flex items-center gap-1 hover:bg-secondary">
               <span class="material-symbols-outlined text-[13px]">send</span> Nudge
             </button>
           ` : `
@@ -1346,7 +1334,7 @@ function addActivityLog(text, icon = "📌") {
     time: "Just now",
     icon
   });
-  if (activityFeed.length > 20) activityFeed.pop();
+  if (activityFeed.length > 25) activityFeed.pop();
 }
 
 function renderHomeActivityFeed() {
@@ -1355,7 +1343,7 @@ function renderHomeActivityFeed() {
 
   container.innerHTML = "";
   if (activityFeed.length === 0) {
-    container.innerHTML = `<p class="py-4 text-center text-xs text-on-surface-variant italic">No room activity yet.</p>`;
+    container.innerHTML = `<p class="py-4 text-center text-xs text-on-surface-variant italic">No room activity logged yet.</p>`;
     return;
   }
 
@@ -1378,7 +1366,6 @@ function renderFullStatsView() {
   const container = document.getElementById("statsBadgesContainer");
   if (!container) return;
 
-  // Compute stats
   const totals = {};
   friends.forEach(f => totals[f] = 0);
   expenses.forEach(e => {
@@ -1386,43 +1373,43 @@ function renderFullStatsView() {
     totals[e.paidBy] += e.amount;
   });
 
-  const biggestContributor = Object.keys(totals).reduce((a, b) => totals[a] > totals[b] ? a : b, friends[0] || "You");
-  const biggestContribAmt = totals[biggestContributor] || 0;
+  const topContrib = Object.keys(totals).length > 0 ? Object.keys(totals).reduce((a, b) => totals[a] > totals[b] ? a : b, friends[0] || "You") : "None";
+  const topAmt = totals[topContrib] || 0;
 
   container.innerHTML = `
     <div class="rounded-2xl bg-surface-container-lowest p-5 shadow-sm border border-outline-variant/20 space-y-2 text-center">
       <div class="w-12 h-12 rounded-full bg-amber-100 text-amber-700 mx-auto flex items-center justify-center text-2xl">🏆</div>
       <h3 class="font-headline-sm text-sm font-bold text-on-surface">Biggest Contributor</h3>
-      <p class="font-label-sm text-xs font-semibold text-primary">${biggestContributor}</p>
-      <span class="font-label-sm text-[11px] text-on-surface-variant block">₹${biggestContribAmt.toLocaleString()} total logged</span>
+      <p class="font-label-sm text-xs font-semibold text-primary">${topContrib}</p>
+      <span class="font-label-sm text-[11px] text-on-surface-variant block">₹${topAmt.toLocaleString()} total logged</span>
     </div>
 
     <div class="rounded-2xl bg-surface-container-lowest p-5 shadow-sm border border-outline-variant/20 space-y-2 text-center">
       <div class="w-12 h-12 rounded-full bg-orange-100 text-orange-700 mx-auto flex items-center justify-center text-2xl">☕</div>
       <h3 class="font-headline-sm text-sm font-bold text-on-surface">Chai Champion</h3>
-      <p class="font-label-sm text-xs font-semibold text-primary">Rahul</p>
-      <span class="font-label-sm text-[11px] text-on-surface-variant block">17 canteen purchases</span>
+      <p class="font-label-sm text-xs font-semibold text-primary">${friends[0] || 'You'}</p>
+      <span class="font-label-sm text-[11px] text-on-surface-variant block">Top room purchaser</span>
     </div>
 
     <div class="rounded-2xl bg-surface-container-lowest p-5 shadow-sm border border-outline-variant/20 space-y-2 text-center">
       <div class="w-12 h-12 rounded-full bg-blue-100 text-blue-700 mx-auto flex items-center justify-center text-2xl">🧾</div>
       <h3 class="font-headline-sm text-sm font-bold text-on-surface">Bill King</h3>
-      <p class="font-label-sm text-xs font-semibold text-primary">Aman</p>
-      <span class="font-label-sm text-[11px] text-on-surface-variant block">4 recurring bills paid</span>
+      <p class="font-label-sm text-xs font-semibold text-primary">${friends[0] || 'You'}</p>
+      <span class="font-label-sm text-[11px] text-on-surface-variant block">Recurring bill manager</span>
     </div>
 
     <div class="rounded-2xl bg-surface-container-lowest p-5 shadow-sm border border-outline-variant/20 space-y-2 text-center">
       <div class="w-12 h-12 rounded-full bg-emerald-100 text-emerald-700 mx-auto flex items-center justify-center text-2xl">🔥</div>
       <h3 class="font-headline-sm text-sm font-bold text-on-surface">Most Reliable</h3>
-      <p class="font-label-sm text-xs font-semibold text-primary">You</p>
+      <p class="font-label-sm text-xs font-semibold text-primary">${currentUser ? currentUser.name : 'You'}</p>
       <span class="font-label-sm text-[11px] text-tertiary font-bold block">100% settled status</span>
     </div>
 
     <div class="rounded-2xl bg-surface-container-lowest p-5 shadow-sm border border-outline-variant/20 space-y-2 text-center">
       <div class="w-12 h-12 rounded-full bg-purple-100 text-purple-700 mx-auto flex items-center justify-center text-2xl">🛒</div>
       <h3 class="font-headline-sm text-sm font-bold text-on-surface">Stock Manager</h3>
-      <p class="font-label-sm text-xs font-semibold text-primary">Karan</p>
-      <span class="font-label-sm text-[11px] text-on-surface-variant block">8 items restocked</span>
+      <p class="font-label-sm text-xs font-semibold text-primary">${friends[1] || 'Roommate'}</p>
+      <span class="font-label-sm text-[11px] text-on-surface-variant block">Shared inventory restocker</span>
     </div>
   `;
 }
@@ -1471,7 +1458,7 @@ function handleModalAddExpense() {
   const title = titleInput ? titleInput.value.trim() : "";
   const amount = amountInput ? parseFloat(amountInput.value) : NaN;
   const category = categoryInput ? categoryInput.value : "Food & Mess";
-  const paidBy = paidByInput ? paidByInput.value : "You";
+  const paidBy = paidByInput ? paidByInput.value : (currentUser ? currentUser.name : "You");
 
   if (!title || isNaN(amount) || amount <= 0) {
     showToast("Please enter title and valid amount", "error");
@@ -1484,7 +1471,7 @@ function handleModalAddExpense() {
     amount,
     paidBy,
     category,
-    splitBetween: [...friends],
+    splitBetween: friends.length > 0 ? [...friends] : [paidBy],
     date: "Just now",
     tag: "Instant Split ⚡"
   });
@@ -1494,6 +1481,44 @@ function handleModalAddExpense() {
   saveData();
   renderAllComponents();
   closeModal("addExpenseModal");
+
+  if (titleInput) titleInput.value = "";
+  if (amountInput) amountInput.value = "";
+
+  showToast(`Expense '₹${amount} for ${title}' added! 🎉`, "success");
+}
+
+function handleFormAddExpense() {
+  const titleInput = document.getElementById("tabExpenseTitle");
+  const amountInput = document.getElementById("tabExpenseAmount");
+  const categoryInput = document.getElementById("tabExpenseCategory");
+  const paidByInput = document.getElementById("tabPaidBy");
+
+  const title = titleInput ? titleInput.value.trim() : "";
+  const amount = amountInput ? parseFloat(amountInput.value) : NaN;
+  const category = categoryInput ? categoryInput.value : "Food & Mess";
+  const paidBy = paidByInput ? paidByInput.value : (currentUser ? currentUser.name : "You");
+
+  if (!title || isNaN(amount) || amount <= 0) {
+    showToast("Please enter title and valid amount", "error");
+    return;
+  }
+
+  expenses.unshift({
+    id: Date.now(),
+    title,
+    amount,
+    paidBy,
+    category,
+    splitBetween: friends.length > 0 ? [...friends] : [paidBy],
+    date: "Just now",
+    tag: "Instant Split ⚡"
+  });
+
+  addActivityLog(`${paidBy} logged ₹${amount} '${title}'`, "📝");
+
+  saveData();
+  renderAllComponents();
 
   if (titleInput) titleInput.value = "";
   if (amountInput) amountInput.value = "";
@@ -1521,7 +1546,7 @@ function handleAddFriendSubmit() {
   closeModal("addFriendModal");
 
   if (input) input.value = "";
-  showToast(`Roommate '${name}' added to Room 204! 🎉`, "success");
+  showToast(`Roommate '${name}' added to room! 🎉`, "success");
 }
 
 function quickFillExpense(title, amount, category) {
@@ -1566,7 +1591,7 @@ function confirmUPISettle(method) {
 }
 
 function promptSetBudget() {
-  const newBudget = prompt("Set Monthly Hostel Budget Pot (₹):", roomBudget);
+  const newBudget = prompt("Set Monthly Room Budget Limit (₹):", roomBudget);
   if (newBudget && !isNaN(parseFloat(newBudget))) {
     roomBudget = parseFloat(newBudget);
     saveData();
@@ -1575,11 +1600,19 @@ function promptSetBudget() {
 }
 
 function clearAllDataPrompt() {
-  if (confirm("Reset all room data back to default demo state?")) {
+  if (confirm("Reset all room data back to clean state?")) {
+    friends = currentUser ? [currentUser.name] : [];
+    expenses = [];
+    stock = [];
+    wallet = { balance: 0, contributions: [], expenses: [] };
+    ious = [];
+    bills = [];
+    activityFeed = [];
     localStorage.clear();
-    loadStoredData();
+    if (currentUser) localStorage.setItem("payyaar_v5_user", JSON.stringify(currentUser));
+    saveData();
     renderAllComponents();
-    showToast("All room data reset successfully!", "info");
+    showToast("All room data cleared!", "info");
   }
 }
 

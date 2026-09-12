@@ -1,4 +1,4 @@
-/* PayYaar Hostel OS - Complete Aesthetic Styling */
+/* PayYaar Hostel OS - Aesthetics & Auth Page Styles */
 
 @layer base {
   html {
@@ -23,8 +23,8 @@
 }
 
 .no-scrollbar {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 /* Smooth Fade-In Animation for Modals & Views */
