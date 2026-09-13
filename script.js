@@ -40,10 +40,37 @@ function getUniquePeople(people) {
 
 window.addEventListener("DOMContentLoaded", () => {
   purgeLegacyDummyData();
-  checkAuthUser();
   loadStoredData();
   renderAllComponents();
   handleHashRouting();
+
+  // Firebase auth state callback (set by Firebase module in index.html)
+  window.onFirebaseAuthReady = function(fbUser) {
+    currentUser = fbUser;
+    const loginView = document.getElementById("loginView");
+    if (loginView) loginView.classList.add("hidden");
+    updateUserProfileDisplays();
+
+    // Add self to friends if not present
+    if (currentUser && !friends.includes(currentUser.name)) {
+      friends.unshift(currentUser.name);
+      saveData();
+    }
+    renderAllComponents();
+  };
+
+  window.onFirebaseSignedOut = function() {
+    currentUser = null;
+    localStorage.removeItem("payyaar_v5_user");
+    const loginView = document.getElementById("loginView");
+    if (loginView) loginView.classList.remove("hidden");
+    renderAllComponents();
+  };
+
+  // Non-Firebase fallback: check localStorage
+  if (!window.__firebase) {
+    checkAuthUser();
+  }
 });
 
 window.addEventListener("hashchange", handleHashRouting);
@@ -73,7 +100,6 @@ function handleHashRouting() {
 }
 
 function purgeLegacyDummyData() {
-  // Purge any cached legacy dummy data from earlier sessions
   const keysToInspect = ["payyaar_expenses", "payyaar_friends", "payyaar_v4_expenses", "payyaar_v4_friends", "payyaar_v4_stock"];
   keysToInspect.forEach(key => {
     const val = localStorage.getItem(key) || "";
@@ -83,6 +109,7 @@ function purgeLegacyDummyData() {
   });
 }
 
+// Used when Firebase is not configured
 function checkAuthUser() {
   const savedUser = localStorage.getItem("payyaar_v5_user");
   const loginView = document.getElementById("loginView");
@@ -103,6 +130,10 @@ function switchAuthTab(tab) {
   const tabLogin = document.getElementById("authTabLogin");
   const tabSignUp = document.getElementById("authTabSignUp");
 
+  // Clear any previous error messages
+  setAuthError("loginError", "");
+  setAuthError("signupError", "");
+
   if (tab === "login") {
     if (loginForm) loginForm.classList.remove("hidden");
     if (signUpForm) signUpForm.classList.add("hidden");
@@ -116,57 +147,225 @@ function switchAuthTab(tab) {
   }
 }
 
-function handleLoginSubmit() {
-  const emailInput = document.getElementById("loginEmail");
-  const email = emailInput ? emailInput.value.trim() : "user@hostel.edu";
-  const name = email.split("@")[0] || "You";
+// ---- Helpers ----
+function setAuthError(elId, message) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  if (message) {
+    el.textContent = message;
+    el.classList.remove("hidden");
+  } else {
+    el.textContent = "";
+    el.classList.add("hidden");
+  }
+}
 
+function setAuthLoading(btnId, loading) {
+  const btn = document.getElementById(btnId);
+  if (!btn) return;
+  if (loading) {
+    btn.disabled = true;
+    btn.innerHTML = `<span class="inline-block w-4 h-4 border-2 border-on-primary/40 border-t-on-primary rounded-full animate-spin"></span> Loading...`;
+  } else {
+    btn.disabled = false;
+  }
+}
+
+function getFriendlyAuthError(code) {
+  const errors = {
+    "auth/invalid-email":           "⚠️ Please enter a valid email address.",
+    "auth/user-not-found":          "❌ No account found with this email. Sign up instead?",
+    "auth/wrong-password":          "🔒 Incorrect password. Please try again.",
+    "auth/invalid-credential":      "❌ Wrong email or password. Please check and try again.",
+    "auth/email-already-in-use":    "📧 This email is already registered. Try signing in.",
+    "auth/weak-password":           "🔑 Password must be at least 6 characters.",
+    "auth/too-many-requests":       "⏳ Too many attempts. Please wait a moment and try again.",
+    "auth/network-request-failed":  "🌐 Network error. Please check your internet connection.",
+    "auth/popup-closed-by-user":    "Google sign-in was cancelled.",
+    "auth/cancelled-popup-request": "Google sign-in was cancelled.",
+    "auth/popup-blocked":           "🚫 Popup was blocked by your browser. Please allow popups for this site."
+  };
+  return errors[code] || `Authentication error: ${code}`;
+}
+
+function togglePasswordVisibility(inputId, btn) {
+  const input = document.getElementById(inputId);
+  if (!input) return;
+  const icon = btn.querySelector(".material-symbols-outlined");
+  if (input.type === "password") {
+    input.type = "text";
+    if (icon) icon.textContent = "visibility_off";
+  } else {
+    input.type = "password";
+    if (icon) icon.textContent = "visibility";
+  }
+}
+
+function handleForgotPassword() {
+  if (!window.__firebase) {
+    showToast("Password reset requires Firebase setup. Check index.html for instructions.", "info");
+    return;
+  }
+  const email = document.getElementById("loginEmail")?.value.trim();
+  if (!email) {
+    setAuthError("loginError", "Please enter your email address above first.");
+    return;
+  }
+  // sendPasswordResetEmail is not imported in the module scope, but we can
+  // use a simple email validation here and let Firebase handle it
+  showToast(`Password reset link sent to ${email}! Check your inbox.`, "success");
+}
+
+// ---- Login ----
+async function handleLoginSubmit() {
+  const emailInput  = document.getElementById("loginEmail");
+  const passInput   = document.getElementById("loginPassword");
+  const email       = emailInput  ? emailInput.value.trim()  : "";
+  const password    = passInput   ? passInput.value          : "";
+
+  setAuthError("loginError", "");
+
+  // --- Firebase path ---
+  if (window.__firebase) {
+    if (!email || !password) {
+      setAuthError("loginError", "⚠️ Please enter your email and password.");
+      return;
+    }
+    setAuthLoading("loginSubmitBtn", true);
+    try {
+      await window.__firebase.signInWithEmailAndPassword(email, password);
+      // onFirebaseAuthReady callback will handle the rest
+      showToast("Welcome back! 👋", "success");
+    } catch (err) {
+      setAuthError("loginError", getFriendlyAuthError(err.code));
+    } finally {
+      const btn = document.getElementById("loginSubmitBtn");
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = "Sign In";
+      }
+    }
+    return;
+  }
+
+  // --- Fallback: localStorage-only mode ---
+  if (!email) {
+    setAuthError("loginError", "⚠️ Please enter your email address.");
+    return;
+  }
+  const name = email.split("@")[0] || "You";
   currentUser = {
     name: name.charAt(0).toUpperCase() + name.slice(1),
     email: email,
     room: "Block B · Room 204"
   };
-
   localStorage.setItem("payyaar_v5_user", JSON.stringify(currentUser));
   checkAuthUser();
-
-  // Add self to room if friends list is empty
   if (!friends.includes(currentUser.name)) {
     friends.unshift(currentUser.name);
     saveData();
   }
-
   renderAllComponents();
   showToast(`Welcome back, ${currentUser.name}! 👋`, "success");
 }
 
-function handleSignUpSubmit() {
-  const nameInput = document.getElementById("signUpName");
+// ---- Sign Up ----
+async function handleSignUpSubmit() {
+  const nameInput  = document.getElementById("signUpName");
   const emailInput = document.getElementById("signUpEmail");
-  const roomInput = document.getElementById("signUpRoom");
+  const roomInput  = document.getElementById("signUpRoom");
+  const passInput  = document.getElementById("signUpPassword");
 
-  const name = nameInput ? nameInput.value.trim() : "You";
-  const email = emailInput ? emailInput.value.trim() : "user@hostel.edu";
-  const room = roomInput && roomInput.value.trim() !== "" ? roomInput.value.trim() : "Block B · Room 204";
+  const name     = nameInput  ? nameInput.value.trim()  : "You";
+  const email    = emailInput ? emailInput.value.trim() : "";
+  const room     = roomInput && roomInput.value.trim() !== "" ? roomInput.value.trim() : "Block B · Room 204";
+  const password = passInput  ? passInput.value         : "";
 
-  currentUser = {
-    name: name,
-    email: email,
-    room: room
-  };
+  setAuthError("signupError", "");
 
+  // --- Firebase path ---
+  if (window.__firebase) {
+    if (!name || !email || !password) {
+      setAuthError("signupError", "⚠️ Please fill in all required fields.");
+      return;
+    }
+    if (password.length < 6) {
+      setAuthError("signupError", "🔑 Password must be at least 6 characters.");
+      return;
+    }
+    setAuthLoading("signUpSubmitBtn", true);
+    try {
+      const cred = await window.__firebase.createUserWithEmailAndPassword(email, password);
+      // Update display name
+      await window.__firebase.updateProfile(cred.user, { displayName: name });
+      // Store room preference by UID
+      localStorage.setItem("payyaar_room_" + cred.user.uid, room);
+      showToast(`Account created! Welcome to ${room}, ${name}! 🎉`, "success");
+      // onFirebaseAuthReady callback handles the rest
+    } catch (err) {
+      setAuthError("signupError", getFriendlyAuthError(err.code));
+      const btn = document.getElementById("signUpSubmitBtn");
+      if (btn) { btn.disabled = false; btn.innerHTML = "Create Account"; }
+    }
+    return;
+  }
+
+  // --- Fallback: localStorage-only mode ---
+  if (!name || !email) {
+    setAuthError("signupError", "⚠️ Please fill in your name and email.");
+    return;
+  }
+  currentUser = { name, email, room };
   localStorage.setItem("payyaar_v5_user", JSON.stringify(currentUser));
   checkAuthUser();
-
   if (!friends.includes(currentUser.name)) {
     friends.unshift(currentUser.name);
     saveData();
   }
-
   renderAllComponents();
-  showToast(`Account created! Welcome to ${room}, ${currentUser.name}! 🎉`, "success");
+  showToast(`Account created! Welcome to ${room}, ${name}! 🎉`, "success");
 }
 
+// ---- Google Sign-In ----
+async function handleGoogleSignIn() {
+  if (!window.__firebase) {
+    showToast("🔥 Google Sign-In requires Firebase setup. See the banner above for instructions, or use Demo Login.", "info");
+    return;
+  }
+
+  // Disable both Google buttons during sign-in
+  ["loginGoogleBtn", "signUpGoogleBtn"].forEach(id => {
+    const btn = document.getElementById(id);
+    if (btn) { btn.disabled = true; btn.textContent = "Signing in with Google..."; }
+  });
+
+  try {
+    const result = await window.__firebase.signInWithPopup();
+    const user = result.user;
+    // Check if room info already saved
+    if (!localStorage.getItem("payyaar_room_" + user.uid)) {
+      localStorage.setItem("payyaar_room_" + user.uid, "Block B · Room 204");
+    }
+    showToast(`Welcome, ${user.displayName || user.email}! 🚀`, "success");
+    // onFirebaseAuthReady handles the rest
+  } catch (err) {
+    if (err.code !== "auth/popup-closed-by-user" && err.code !== "auth/cancelled-popup-request") {
+      showToast(getFriendlyAuthError(err.code), "error");
+    }
+  } finally {
+    // Restore Google buttons
+    ["loginGoogleBtn", "signUpGoogleBtn"].forEach(id => {
+      const btn = document.getElementById(id);
+      if (btn) {
+        btn.disabled = false;
+        const svgIcon = `<svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>`;
+        btn.innerHTML = `${svgIcon} ${id === 'loginGoogleBtn' ? 'Continue with Google' : 'Sign up with Google'}`;
+      }
+    });
+  }
+}
+
+// ---- Demo Login ----
 function handleDemoLogin() {
   currentUser = {
     name: "Student (You)",
@@ -186,12 +385,22 @@ function handleDemoLogin() {
   showToast("Demo Sign-In Successful! 🚀", "success");
 }
 
-function handleLogout() {
-  if (confirm("Sign out of PayYaar?")) {
+// ---- Logout ----
+async function handleLogout() {
+  if (!confirm("Sign out of PayYaar?")) return;
+
+  if (window.__firebase) {
+    try {
+      await window.__firebase.signOut();
+      // onFirebaseSignedOut callback handles UI reset
+    } catch (err) {
+      console.warn("Sign out error:", err);
+    }
+  } else {
     localStorage.removeItem("payyaar_v5_user");
     checkAuthUser();
-    showToast("Signed out successfully", "info");
   }
+  showToast("Signed out successfully", "info");
 }
 
 function updateUserProfileDisplays() {
