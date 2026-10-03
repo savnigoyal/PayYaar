@@ -2199,10 +2199,20 @@ function handleAddFriendSubmit() {
   showToast(`Roommate '${name}' added to room! 🎉`, "success");
 }
 
-function nudgeRoommate(name, amount, item) {
-  const msg = `Oi ${name}! PayYaar reminder: ₹${amount} pending for '${item}'. Jaldi UPI kar de bhai! 🤙`;
-  if (navigator.clipboard) navigator.clipboard.writeText(msg);
-  showToast(`WhatsApp reminder copied for ${name}! 📲`, "success");
+async function nudgeRoommate(name, amount, item) {
+  const formattedAmount = Number(amount).toFixed(2);
+  const message = `Hey ${name}! 💸 Just a heads-up from PayYaar!
+
+₹${formattedAmount} is still pending for *${item}*. Time to clear those dues and keep the room finances in check! 💰✨
+
+Let's get those pending payments sorted!`;
+
+  try {
+    await navigator.clipboard.writeText(message);
+    showToast(`WhatsApp reminder copied for ${name}! 📲`, "success");
+  } catch (error) {
+    showToast("Could not copy the reminder. Check clipboard permissions and try again.", "error");
+  }
 }
 
 function openUPIModal(name, amount, from = currentUser?.name, to = name) {
@@ -2262,6 +2272,12 @@ function confirmUPISettle(method) {
   activeSettlement = null;
   closeModal("upiSettleModal");
   showToast("Payment recorded. Roommate balances have been updated.", "success");
+}
+
+function promptOtherSettlementMethod() {
+  const method = prompt("Enter the payment method used:")?.trim();
+  if (!method) return;
+  confirmUPISettle(method);
 }
 
 function promptSetBudget() {
