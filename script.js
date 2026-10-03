@@ -43,6 +43,18 @@ function getSharedExpenses() {
   return expenses.filter(expense => expense.paidBy !== "Room Wallet" && expense.tag !== "Paid from Wallet 💳");
 }
 
+function calculateExpenseShares(expense) {
+  const participants = getUniquePeople(Array.isArray(expense.splitBetween) ? expense.splitBetween : []);
+  if (participants.length === 0) return [];
+  const totalCents = Math.round(expense.amount * 100);
+  const baseShareCents = Math.floor(totalCents / participants.length);
+  const remainderCents = totalCents % participants.length;
+  return participants.map((person, index) => ({
+    person,
+    amount: (baseShareCents + (index < remainderCents ? 1 : 0)) / 100
+  }));
+}
+
 // Helper: Unique list
 function getUniquePeople(people) {
   if (!people) return [];
@@ -1739,21 +1751,16 @@ function calculateNetBalances() {
   friends.forEach(f => netBalances[f] = 0);
 
   getSharedExpenses().forEach(exp => {
-    const splitBetween = Array.isArray(exp.splitBetween) ? getUniquePeople(exp.splitBetween) : [];
-    const count = splitBetween.length;
-    if (count === 0) return;
-
+    const shares = calculateExpenseShares(exp);
+    if (shares.length === 0) return;
     const totalCents = Math.round(exp.amount * 100);
-    const baseShareCents = Math.floor(totalCents / count);
-    const remainderCents = totalCents % count;
 
     if (netBalances[exp.paidBy] === undefined) netBalances[exp.paidBy] = 0;
     netBalances[exp.paidBy] += totalCents / 100;
 
-    splitBetween.forEach((person, index) => {
+    shares.forEach(({ person, amount }) => {
       if (netBalances[person] === undefined) netBalances[person] = 0;
-      const shareCents = baseShareCents + (index < remainderCents ? 1 : 0);
-      netBalances[person] -= shareCents / 100;
+      netBalances[person] -= amount;
     });
   });
 
