@@ -56,13 +56,13 @@ PayYaar/
 
 ## Run Locally
 
-Google and email/password sign-in require Firebase project settings in `firebase-config.js`. To enable them:
+Email/password sign-in requires Firebase project settings in `firebase-config.js`. To enable it:
 
 1. Create a Firebase project at [Firebase Console](https://console.firebase.google.com/) and add a Web app.
-2. In **Authentication → Sign-in method**, enable **Google** and **Email/Password**.
+2. In **Authentication → Sign-in method**, enable **Email/Password**.
 3. In **Authentication → Settings → Authorized domains**, add the host you'll use (for local testing, usually `localhost`).
 4. Copy the Web app config into `firebase-config.js`, replacing every `YOUR_...` value.
-5. Serve the folder over HTTP; opening `index.html` with `file://` may block Firebase module imports and popup authentication.
+5. Serve the folder over HTTP; opening `index.html` with `file://` may block Firebase module imports and authentication.
 
 The Firebase web config is not a secret, but restrict its API key in Google Cloud and configure appropriate Firebase Security Rules before using production data.
 
