@@ -54,15 +54,24 @@ PayYaar/
 ├── index.html
 ├── style.css
 ├── script.js
+├── firebase-config.js
 ├── logo.png
 └── README.md
 ```
 
 ## Run Locally
 
-You can run the project by opening `index.html` directly in a browser.
+Google sign-in requires Firebase and will not work while `firebase-config.js` contains the `YOUR_...` placeholders. To enable it:
 
-For a local development server, you can also use:
+1. Create a Firebase project at [Firebase Console](https://console.firebase.google.com/) and add a Web app.
+2. In **Authentication → Sign-in method**, enable **Google**. Enable **Email/Password** too if you want email login and account creation.
+3. In **Authentication → Settings → Authorized domains**, add the host you'll use (for local testing, usually `localhost`).
+4. Copy the Web app config into `firebase-config.js`, replacing every `YOUR_...` value.
+5. Serve the folder over HTTP; opening `index.html` with `file://` may block Firebase module imports and popup authentication.
+
+The Firebase web config is not a secret, but restrict its API key in Google Cloud and configure appropriate Firebase Security Rules before using production data.
+
+To start a local development server, use:
 
 ```bash
 npx serve .

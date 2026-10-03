@@ -90,14 +90,8 @@
 
     <!-- ===== FIREBASE SDK (Authentication) ===== -->
     <script type="module">
-      // ============================================================
-      //  🔥 FIREBASE SETUP — FILL IN YOUR CONFIG BELOW
-      //  1. Go to https://console.firebase.google.com
-      //  2. Create a project → Add Web App
-      //  3. Enable Auth → Email/Password & Google providers
-      //  4. Copy your config object here
-      // ============================================================
       import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+      import { firebaseConfig } from "./firebase-config.js";
       import {
         getAuth,
         onAuthStateChanged,
@@ -109,18 +103,9 @@
         updateProfile
       } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-      // YOUR FIREBASE CONFIG — replace with your own values
-      const firebaseConfig = {
-        apiKey: "YOUR_API_KEY",
-        authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-        projectId: "YOUR_PROJECT_ID",
-        storageBucket: "YOUR_PROJECT_ID.appspot.com",
-        messagingSenderId: "YOUR_SENDER_ID",
-        appId: "YOUR_APP_ID"
-      };
-
-      // Detect if Firebase is configured
-      const firebaseConfigured = firebaseConfig.apiKey !== "YOUR_API_KEY";
+      const firebaseConfigured = Object.values(firebaseConfig).every(
+        value => typeof value === "string" && value.length > 0 && !value.startsWith("YOUR_")
+      );
 
       let firebaseApp, auth, googleProvider;
 
@@ -194,7 +179,7 @@
                     To enable Google Sign-In &amp; real email auth:
                     1. Create a free project at <strong>console.firebase.google.com</strong><br>
                     2. Enable <strong>Email/Password</strong> &amp; <strong>Google</strong> auth providers<br>
-                    3. Paste your config in the <code>&lt;script type="module"&gt;</code> block in <strong>index.html</strong>
+                    3. Paste your web app config into <strong>firebase-config.js</strong>
                 </p>
                 <p class="font-body-sm text-[11px] text-primary font-semibold">✅ Demo Login works without setup!</p>
             </div>
@@ -1515,7 +1500,7 @@
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-2">
                     <span class="material-symbols-outlined text-primary text-[24px]">notifications</span>
-                    <h3 class="font-headline-sm text-base font-bold text-on-surface">Room Notifications</h3>
+                    <h3 class="font-headline-sm text-base font-bold text-on-surface">Room Notifications</h2>
                 </div>
                 <button onclick="closeModal('notificationsModal')" class="w-8 h-8 rounded-full bg-surface-container text-on-surface-variant flex items-center justify-center hover:bg-surface-container-high">×</button>
             </div>
@@ -1537,14 +1522,10 @@
     <!-- MODAL 10: PROFILE & ROOM -->
     <div id="profileModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-on-surface/40 backdrop-blur-sm animate-fade-in">
         <div class="bg-surface-container-lowest rounded-2xl p-6 max-w-sm w-full shadow-2xl space-y-4 border border-outline-variant/30">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                    <span class="material-symbols-outlined text-primary text-[24px]">account_circle</span>
-                    <h3 class="font-headline-sm text-base font-bold text-on-surface">Your Profile</h3>
-                </div>
-                <button onclick="closeModal('profileModal')" class="w-8 h-8 rounded-full bg-surface-container text-on-surface-variant flex items-center justify-center hover:bg-surface-container-high">×</button>
+            <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary text-[24px]">account_circle</span>
+                <h3 class="font-headline-sm text-base font-bold text-on-surface">Your Profile</h3>
             </div>
-            
             <div class="text-center space-y-2 py-2">
                 <div class="w-16 h-16 rounded-full bg-primary text-on-primary mx-auto flex items-center justify-center text-2xl font-bold" id="modalProfileAvatar">Y</div>
                 <div>
