@@ -274,11 +274,20 @@
                     </div>
                 </div>
 
-                <div class="space-y-1.5">
-                    <label class="font-label-md text-xs text-on-surface-variant font-semibold">Hostel Block &amp; Room No</label>
-                    <div class="flex items-center rounded-xl bg-surface-container-low px-3.5 py-2.5 border border-outline-variant/20 focus-within:border-primary transition-all">
-                        <span class="material-symbols-outlined text-on-surface-variant text-[18px] mr-2.5">apartment</span>
-                        <input id="signUpRoom" required type="text" placeholder="e.g. Block B · Room 204" class="bg-transparent w-full text-on-surface font-body-md text-sm focus:outline-none placeholder:text-outline">
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="space-y-1.5">
+                        <label for="signUpBlock" class="font-label-md text-xs text-on-surface-variant font-semibold">Hostel Block</label>
+                        <div class="flex items-center rounded-xl bg-surface-container-low px-3.5 py-2.5 border border-outline-variant/20 focus-within:border-primary transition-all">
+                            <span class="material-symbols-outlined text-on-surface-variant text-[18px] mr-2.5">apartment</span>
+                            <input id="signUpBlock" required type="text" placeholder="e.g. Block B" autocomplete="address-line1" class="bg-transparent w-full min-w-0 text-on-surface font-body-md text-sm focus:outline-none placeholder:text-outline">
+                        </div>
+                    </div>
+                    <div class="space-y-1.5">
+                        <label for="signUpRoomNumber" class="font-label-md text-xs text-on-surface-variant font-semibold">Room Number</label>
+                        <div class="flex items-center rounded-xl bg-surface-container-low px-3.5 py-2.5 border border-outline-variant/20 focus-within:border-primary transition-all">
+                            <span class="material-symbols-outlined text-on-surface-variant text-[18px] mr-2.5">meeting_room</span>
+                            <input id="signUpRoomNumber" required type="text" placeholder="e.g. 204" autocomplete="off" class="bg-transparent w-full min-w-0 text-on-surface font-body-md text-sm focus:outline-none placeholder:text-outline">
+                        </div>
                     </div>
                 </div>
 

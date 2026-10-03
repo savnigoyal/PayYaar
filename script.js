@@ -273,19 +273,22 @@ async function handleLoginSubmit() {
 async function handleSignUpSubmit() {
   const nameInput  = document.getElementById("signUpName");
   const emailInput = document.getElementById("signUpEmail");
-  const roomInput  = document.getElementById("signUpRoom");
+  const blockInput = document.getElementById("signUpBlock");
+  const roomInput  = document.getElementById("signUpRoomNumber");
   const passInput  = document.getElementById("signUpPassword");
 
   const name     = nameInput  ? nameInput.value.trim()  : "You";
   const email    = emailInput ? emailInput.value.trim() : "";
-  const room     = roomInput && roomInput.value.trim() !== "" ? roomInput.value.trim() : "Block B · Room 204";
+  const block    = blockInput ? blockInput.value.trim() : "";
+  const roomNumber = roomInput ? roomInput.value.trim() : "";
+  const room     = block && roomNumber ? `${block} · Room ${roomNumber}` : "";
   const password = passInput  ? passInput.value         : "";
 
   setAuthError("signupError", "");
 
   // --- Firebase path ---
   if (window.__firebase) {
-    if (!name || !email || !password) {
+    if (!name || !email || !block || !roomNumber || !password) {
       setAuthError("signupError", "⚠️ Please fill in all required fields.");
       return;
     }
@@ -311,8 +314,8 @@ async function handleSignUpSubmit() {
   }
 
   // --- Fallback: localStorage-only mode ---
-  if (!name || !email) {
-    setAuthError("signupError", "⚠️ Please fill in your name and email.");
+  if (!name || !email || !block || !roomNumber) {
+    setAuthError("signupError", "⚠️ Please fill in your name, email, hostel block, and room number.");
     return;
   }
   currentUser = { name, email, room };
