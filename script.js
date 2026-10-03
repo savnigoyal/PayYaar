@@ -39,6 +39,10 @@ function escapeHTML(value) {
   })[character]);
 }
 
+function formatMoney(amount) {
+  return Number(amount).toLocaleString(undefined, { maximumFractionDigits: 2 });
+}
+
 function getSharedExpenses() {
   return expenses.filter(expense => expense.paidBy !== "Room Wallet" && expense.tag !== "Paid from Wallet 💳");
 }
@@ -687,17 +691,17 @@ function renderHomeView() {
       homeNetStatus.innerText = "No Dues";
     }
   } else if (myNet >= 0) {
-    if (homeNetShare) homeNetShare.innerText = `₹${Math.round(myNet).toLocaleString()}`;
+    if (homeNetShare) homeNetShare.innerText = `₹${formatMoney(myNet)}`;
     if (homeNetStatus) {
       homeNetStatus.className = "font-label-sm text-xs text-tertiary-fixed font-medium truncate";
-      homeNetStatus.innerText = `+₹${Math.round(myNet).toLocaleString()} lent`;
+      homeNetStatus.innerText = `₹${formatMoney(myNet)} receivable`;
     }
   } else {
     const absNet = Math.abs(myNet);
-    if (homeNetShare) homeNetShare.innerText = `₹${Math.round(absNet).toLocaleString()}`;
+    if (homeNetShare) homeNetShare.innerText = `₹${formatMoney(absNet)}`;
     if (homeNetStatus) {
       homeNetStatus.className = "font-label-sm text-xs text-error-container font-medium truncate";
-      homeNetStatus.innerText = `-₹${Math.round(absNet).toLocaleString()} owe`;
+      homeNetStatus.innerText = `₹${formatMoney(absNet)} payable`;
     }
   }
 
@@ -744,12 +748,12 @@ function renderHostelOverview() {
 
   if (myNet >= 0) {
     if (hubOwedLabel) hubOwedLabel.innerText = "You're owed";
-    if (hubOwedAmount) hubOwedAmount.innerText = `₹${Math.round(myNet).toLocaleString()}`;
-    if (hubOwedSubtitle) hubOwedSubtitle.innerText = `+₹${Math.round(myNet).toLocaleString()} lent to room`;
+    if (hubOwedAmount) hubOwedAmount.innerText = `₹${formatMoney(myNet)}`;
+    if (hubOwedSubtitle) hubOwedSubtitle.innerText = `₹${formatMoney(myNet)} receivable from room`;
   } else {
     if (hubOwedLabel) hubOwedLabel.innerText = "You owe";
-    if (hubOwedAmount) hubOwedAmount.innerText = `₹${Math.round(Math.abs(myNet)).toLocaleString()}`;
-    if (hubOwedSubtitle) hubOwedSubtitle.innerText = `-₹${Math.round(Math.abs(myNet)).toLocaleString()} owe room`;
+    if (hubOwedAmount) hubOwedAmount.innerText = `₹${formatMoney(Math.abs(myNet))}`;
+    if (hubOwedSubtitle) hubOwedSubtitle.innerText = `₹${formatMoney(Math.abs(myNet))} payable to room`;
   }
 
   const hubWalletBalance = document.getElementById("hubWalletBalance");
@@ -811,7 +815,8 @@ function renderHostelExpensesView() {
 
   getSharedExpenses().forEach(exp => {
     const category = String(exp.category || "");
-    const splitBetween = Array.isArray(exp.splitBetween) ? getUniquePeople(exp.splitBetween) : [];
+    const shares = calculateExpenseShares(exp);
+    const shareLabel = shares.map(share => `${escapeHTML(share.person)} ₹${share.amount.toFixed(2)}`).join(", ");
     const icon = category.includes('Food') ? '🍜' : category.includes('Groceries') ? '🛒' : category.includes('Bills') ? '📶' : category.includes('Rent') ? '🧹' : category.includes('Cab') ? '🛵' : '💸';
     container.innerHTML += `
       <div class="py-3.5 flex items-center justify-between gap-3">
@@ -821,7 +826,7 @@ function renderHostelExpensesView() {
           </div>
           <div class="min-w-0">
             <span class="font-headline-sm text-sm font-bold text-on-surface block truncate">${escapeHTML(exp.title)}</span>
-            <span class="font-label-sm text-xs text-on-surface-variant truncate block">Paid by ${escapeHTML(exp.paidBy)} · split ${splitBetween.map(escapeHTML).join(", ") || "members"}</span>
+            <span class="font-label-sm text-xs text-on-surface-variant truncate block">Paid by ${escapeHTML(exp.paidBy)} · shares ${shareLabel || "not assigned"}</span>
           </div>
         </div>
         <div class="text-right shrink-0">
@@ -928,8 +933,8 @@ function renderHostelActivityView() {
     container.innerHTML += `
       <div class="py-3 flex items-center justify-between gap-3">
         <div class="flex items-center gap-3 min-w-0">
-          <span class="text-2xl shrink-0">${item.icon}</span>
-          <span class="font-body-sm text-xs text-on-surface font-medium truncate">${item.text}</span>
+          <span class="text-2xl shrink-0">${escapeHTML(item.icon)}</span>
+          <span class="font-body-sm text-xs text-on-surface font-medium truncate">${escapeHTML(item.text)}</span>
         </div>
         <span class="font-label-sm text-[11px] text-on-surface-variant shrink-0">${item.time}</span>
       </div>
@@ -983,8 +988,8 @@ function renderFullStockView() {
             <div class="flex items-center gap-2.5">
               <span class="text-3xl">${item.icon}</span>
               <div>
-                <h3 class="font-headline-sm text-base font-bold text-on-surface">${item.name}</h3>
-                <span class="font-label-sm text-[11px] text-on-surface-variant">Added by ${item.purchasedBy} · ₹${item.totalCost}</span>
+                <h3 class="font-headline-sm text-base font-bold text-on-surface">${escapeHTML(item.name)}</h3>
+                <span class="font-label-sm text-[11px] text-on-surface-variant">Added by ${escapeHTML(item.purchasedBy)} · ₹${formatMoney(item.totalCost)}</span>
               </div>
             </div>
             ${isLow ? `
@@ -1000,7 +1005,7 @@ function renderFullStockView() {
 
           <div class="p-3 rounded-xl bg-surface-container-low flex items-center justify-between">
             <span class="font-label-sm text-xs text-on-surface-variant font-medium">Quantity Left:</span>
-            <span class="font-headline-sm text-lg font-bold ${isLow ? 'text-error' : 'text-on-surface'}">${item.quantity} ${item.unit}</span>
+            <span class="font-headline-sm text-lg font-bold ${isLow ? 'text-error' : 'text-on-surface'}">${item.quantity} ${escapeHTML(item.unit)}</span>
           </div>
         </div>
 
@@ -1035,11 +1040,11 @@ function renderHomeStockPreview() {
     container.innerHTML += `
       <div class="p-3 rounded-xl bg-surface-container-low border border-outline-variant/15 flex items-center justify-between">
         <div class="flex items-center gap-2 min-w-0">
-          <span class="text-xl shrink-0">${item.icon}</span>
+          <span class="text-xl shrink-0">${escapeHTML(item.icon)}</span>
           <div class="min-w-0">
-            <span class="font-headline-sm text-xs font-bold text-on-surface block truncate">${item.name}</span>
+            <span class="font-headline-sm text-xs font-bold text-on-surface block truncate">${escapeHTML(item.name)}</span>
             <span class="font-label-sm text-[11px] ${isLow ? 'text-error font-semibold' : 'text-on-surface-variant'} truncate block">
-              ${item.quantity} ${item.unit}
+              ${item.quantity} ${escapeHTML(item.unit)}
             </span>
           </div>
         </div>
@@ -1375,7 +1380,7 @@ function renderFullIOUsView() {
     const icon = typeIcons[iou.type] || "📌";
     const borrower = iou.borrower || iou.person || "Roommate";
     const lender = iou.lender || (borrower !== meName ? meName : "Roommate");
-    const dueLabel = iou.dueDate ? ` · Due ${iou.dueDate}` : "";
+    const dueLabel = iou.dueDate ? ` · Due ${escapeHTML(iou.dueDate)}` : "";
     const itemLabel = iou.type === "Money" ? `₹${getIOUMoneyAmount(iou).toLocaleString()}` : iou.itemOrAmount;
 
     container.innerHTML += `
@@ -1385,8 +1390,8 @@ function renderFullIOUsView() {
             <div class="flex items-center gap-2">
               <span class="text-2xl">${icon}</span>
               <div>
-                <h3 class="font-headline-sm text-base font-bold text-on-surface">${borrower} owes ${lender}</h3>
-                <span class="font-label-sm text-[11px] text-on-surface-variant">Personal ${iou.type} borrowing${dueLabel}</span>
+                <h3 class="font-headline-sm text-base font-bold text-on-surface">${escapeHTML(borrower)} owes ${escapeHTML(lender)}</h3>
+                <span class="font-label-sm text-[11px] text-on-surface-variant">Personal ${escapeHTML(iou.type)} borrowing${dueLabel}</span>
               </div>
             </div>
             ${isSettled ? `
@@ -1401,32 +1406,42 @@ function renderFullIOUsView() {
           </div>
 
           <div class="p-3 rounded-xl bg-surface-container-low space-y-1">
-            <span class="font-headline-sm text-sm font-bold text-on-surface block">${itemLabel}</span>
-            ${iou.description ? `<span class="font-body-sm text-xs text-on-surface-variant block">${iou.description}</span>` : ""}
+            <span class="font-headline-sm text-sm font-bold text-on-surface block">${escapeHTML(itemLabel)}</span>
+            ${iou.description ? `<span class="font-body-sm text-xs text-on-surface-variant block">${escapeHTML(iou.description)}</span>` : ""}
           </div>
         </div>
 
         <div class="flex items-center gap-2 pt-1">
           ${!isSettled ? `
-            <button onclick="nudgeIOU('${borrower}', '${itemLabel}')" class="flex-1 py-2 rounded-xl bg-primary text-on-primary font-label-md text-xs font-bold active:scale-95 transition-all shadow-xs flex items-center justify-center gap-1">
+            <button data-iou-action="remind" data-person="${escapeHTML(borrower)}" data-item="${escapeHTML(itemLabel)}" class="flex-1 py-2 rounded-xl bg-primary text-on-primary font-label-md text-xs font-bold active:scale-95 transition-all shadow-xs flex items-center justify-center gap-1">
               <span class="material-symbols-outlined text-[13px]">send</span> Remind
             </button>
-            <button onclick="settleIOU('${iou.id}', 'personal')" class="flex-1 py-2 rounded-xl bg-tertiary text-on-tertiary font-label-md text-xs font-bold active:scale-95 transition-all shadow-xs">
+            <button data-iou-action="settle-personal" data-iou-id="${escapeHTML(iou.id)}" class="flex-1 py-2 rounded-xl bg-tertiary text-on-tertiary font-label-md text-xs font-bold active:scale-95 transition-all shadow-xs">
               Mark repaid
             </button>
-            ${iou.type === "Money" ? `<button onclick="settleIOU('${iou.id}', 'wallet')" class="flex-1 py-2 rounded-xl bg-surface-container text-on-surface font-label-md text-xs font-bold active:scale-95 transition-all">Repay from wallet</button>` : ""}
+            ${iou.type === "Money" ? `<button data-iou-action="settle-wallet" data-iou-id="${escapeHTML(iou.id)}" class="flex-1 py-2 rounded-xl bg-surface-container text-on-surface font-label-md text-xs font-bold active:scale-95 transition-all">Repay from wallet</button>` : ""}
           ` : `
             <span class="text-xs text-tertiary font-bold flex items-center gap-1">
               <span class="material-symbols-outlined text-[14px]">done_all</span> Returned & Settled
             </span>
           `}
-          <button onclick="deleteIOU('${iou.id}')" class="p-2 rounded-xl text-outline hover:text-error hover:bg-error-container/40 transition-colors" title="Delete IOU">
+          <button data-iou-action="delete" data-iou-id="${escapeHTML(iou.id)}" class="p-2 rounded-xl text-outline hover:text-error hover:bg-error-container/40 transition-colors" title="Delete IOU">
             <span class="material-symbols-outlined text-[18px]">delete</span>
           </button>
         </div>
       </div>
     `;
   });
+
+  container.onclick = event => {
+    const button = event.target.closest("[data-iou-action]");
+    if (!button || !container.contains(button)) return;
+    const { iouAction, iouId, person, item } = button.dataset;
+    if (iouAction === "remind") nudgeIOU(person, item);
+    if (iouAction === "settle-personal") settleIOU(iouId, "personal");
+    if (iouAction === "settle-wallet") settleIOU(iouId, "wallet");
+    if (iouAction === "delete") deleteIOU(iouId);
+  };
 }
 
 function filterIOUs(type, btn) {
@@ -2005,8 +2020,8 @@ function renderHomeActivityFeed() {
     container.innerHTML += `
       <div class="py-3 flex items-center justify-between gap-3">
         <div class="flex items-center gap-3 min-w-0">
-          <span class="text-xl shrink-0">${item.icon}</span>
-          <span class="font-body-sm text-xs text-on-surface font-medium truncate">${item.text}</span>
+          <span class="text-xl shrink-0">${escapeHTML(item.icon)}</span>
+          <span class="font-body-sm text-xs text-on-surface font-medium truncate">${escapeHTML(item.text)}</span>
         </div>
         <span class="font-label-sm text-[11px] text-on-surface-variant shrink-0">${item.time}</span>
       </div>
@@ -2087,13 +2102,13 @@ function renderExpensesView() {
   }
 
   sharedExpenses.forEach(exp => {
-    const splitBetween = Array.isArray(exp.splitBetween) ? exp.splitBetween : [];
-    const share = splitBetween.length ? exp.amount / splitBetween.length : 0;
+    const shares = calculateExpenseShares(exp);
+    const shareLabel = shares.map(share => `${escapeHTML(share.person)} ₹${share.amount.toFixed(2)}`).join(", ");
     container.innerHTML += `
       <div class="py-3 flex items-center justify-between gap-2">
         <div>
           <span class="font-headline-sm text-sm font-bold text-on-surface block">${escapeHTML(exp.title)}</span>
-          <span class="font-label-sm text-xs text-on-surface-variant">Paid by ${escapeHTML(exp.paidBy)} · Split ${splitBetween.map(escapeHTML).join(", ")} (₹${share.toLocaleString(undefined, { maximumFractionDigits: 2 })} each)</span>
+          <span class="font-label-sm text-xs text-on-surface-variant">Paid by ${escapeHTML(exp.paidBy)} · shares ${shareLabel || "not assigned"}</span>
         </div>
         <span class="font-headline-sm text-sm font-bold text-on-surface">₹${exp.amount.toLocaleString()}</span>
       </div>
@@ -2303,7 +2318,9 @@ function showToast(message, type = "info") {
   const bg = type === "success" ? "bg-tertiary text-on-tertiary" : type === "error" ? "bg-error text-on-error" : "bg-primary text-on-primary";
 
   toast.className = `${bg} px-4 py-2.5 rounded-xl shadow-lg font-label-md text-xs font-semibold flex items-center gap-2 transition-all duration-300 transform translate-y-2 opacity-0 pointer-events-auto`;
-  toast.innerHTML = `<span>${message}</span>`;
+  const toastMessage = document.createElement("span");
+  toastMessage.textContent = message;
+  toast.appendChild(toastMessage);
 
   container.appendChild(toast);
 
