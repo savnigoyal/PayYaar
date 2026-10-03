@@ -257,7 +257,7 @@ async function handleLoginSubmit() {
   currentUser = {
     name: name.charAt(0).toUpperCase() + name.slice(1),
     email: email,
-    room: "Block B · Room 204"
+    room: ""
   };
   localStorage.setItem("payyaar_v5_user", JSON.stringify(currentUser));
   checkAuthUser();
@@ -304,7 +304,15 @@ async function handleSignUpSubmit() {
       // Store room preference by UID
       localStorage.setItem("payyaar_room_" + cred.user.uid, room);
       showToast(`Account created! Welcome to ${room}, ${name}! 🎉`, "success");
-      // onFirebaseAuthReady callback handles the rest
+      if (typeof window.onFirebaseAuthReady === "function") {
+        window.onFirebaseAuthReady({
+          name,
+          email,
+          room,
+          uid: cred.user.uid,
+          photoURL: cred.user.photoURL || null
+        });
+      }
     } catch (err) {
       setAuthError("signupError", getFriendlyAuthError(err.code));
       const btn = document.getElementById("signUpSubmitBtn");
@@ -332,7 +340,7 @@ async function handleSignUpSubmit() {
 // ---- Google Sign-In ----
 async function handleGoogleSignIn() {
   if (!window.__firebase) {
-    showToast("Google Sign-In requires Firebase setup. Follow the setup steps above, or use Demo Login.", "info");
+    showToast("Google Sign-In requires Firebase setup. Follow the setup steps above.", "info");
     return;
   }
 
@@ -349,9 +357,6 @@ async function handleGoogleSignIn() {
   try {
     const result = await window.__firebase.signInWithPopup();
     const user = result.user;
-    if (!localStorage.getItem("payyaar_room_" + user.uid)) {
-      localStorage.setItem("payyaar_room_" + user.uid, "Block B · Room 204");
-    }
     showToast(`Welcome, ${user.displayName || user.email}! 🚀`, "success");
   } catch (err) {
     if (err.code !== "auth/popup-closed-by-user" && err.code !== "auth/cancelled-popup-request") {
@@ -363,26 +368,6 @@ async function handleGoogleSignIn() {
       button.innerHTML = originalContent.get(button);
     });
   }
-}
-
-// ---- Demo Login ----
-function handleDemoLogin() {
-  currentUser = {
-    name: "Student (You)",
-    email: "student@hostel.edu",
-    room: "Hostel Room Ledger"
-  };
-
-  localStorage.setItem("payyaar_v5_user", JSON.stringify(currentUser));
-  checkAuthUser();
-
-  if (!friends.includes(currentUser.name)) {
-    friends.unshift(currentUser.name);
-    saveData();
-  }
-
-  renderAllComponents();
-  showToast("Demo Sign-In Successful! 🚀", "success");
 }
 
 // ---- Logout ----
@@ -407,6 +392,8 @@ function updateUserProfileDisplays() {
   if (!currentUser) return;
 
   const initial = currentUser.name.charAt(0).toUpperCase();
+  const room = currentUser.room?.trim() || "Hostel details not set";
+  const roomNumber = currentUser.room?.split("·")[1]?.trim() || "Room not set";
 
   const profileAvatarBig = document.getElementById("profileAvatarBig");
   if (profileAvatarBig) profileAvatarBig.innerText = initial;
@@ -421,22 +408,22 @@ function updateUserProfileDisplays() {
   if (modalProfileName) modalProfileName.innerText = currentUser.name;
 
   const profileUserRoom = document.getElementById("profileUserRoom");
-  if (profileUserRoom) profileUserRoom.innerText = `🏠 ${currentUser.room} · Shared Ledger`;
+  if (profileUserRoom) profileUserRoom.innerText = `🏠 ${room} · Shared Ledger`;
 
   const modalProfileRoom = document.getElementById("modalProfileRoom");
-  if (modalProfileRoom) modalProfileRoom.innerText = `🏠 ${currentUser.room}`;
+  if (modalProfileRoom) modalProfileRoom.innerText = `🏠 ${room}`;
 
   const headerRoomText = document.getElementById("headerRoomText");
-  if (headerRoomText) headerRoomText.innerText = `🏠 ${currentUser.room}`;
+  if (headerRoomText) headerRoomText.innerText = `🏠 ${room}`;
 
   const headerRoomLabel = document.getElementById("headerRoomLabel");
-  if (headerRoomLabel) headerRoomLabel.innerText = currentUser.room.split("·")[1] || currentUser.room;
+  if (headerRoomLabel) headerRoomLabel.innerText = roomNumber;
 
   const homeRoomTitle = document.getElementById("homeRoomTitle");
-  if (homeRoomTitle) homeRoomTitle.innerText = `🏠 ${currentUser.room} · Shared Ledger`;
+  if (homeRoomTitle) homeRoomTitle.innerText = `🏠 ${room} · Shared Ledger`;
 
   const hostelRoomHeading = document.getElementById("hostelRoomHeading");
-  if (hostelRoomHeading) hostelRoomHeading.innerText = currentUser.room;
+  if (hostelRoomHeading) hostelRoomHeading.innerText = room;
 }
 
 // ==================== STORAGE & COMPONENT RENDERERS ====================
@@ -648,7 +635,7 @@ function renderHostelView() {
 function renderHostelOverview() {
   const roomHeading = document.getElementById("hubRoomHeading");
   if (roomHeading) {
-    roomHeading.innerText = `🏠 ${currentUser ? currentUser.room : "Block B · Room 204"}`;
+    roomHeading.innerText = `🏠 ${currentUser?.room?.trim() || "Hostel details not set"}`;
   }
 
   const membersSummary = document.getElementById("hubMembersSummary");
@@ -859,7 +846,7 @@ function renderHostelActivityView() {
 function renderFullStockView() {
   const stockRoomSubtitle = document.getElementById("stockRoomSubtitle");
   if (stockRoomSubtitle) {
-    stockRoomSubtitle.innerText = `Shared items for ${currentUser ? currentUser.room : "Room 204"}`;
+    stockRoomSubtitle.innerText = `Shared items for ${currentUser?.room?.trim() || "your room"}`;
   }
 
   const container = document.getElementById("fullStockContainer");
@@ -2005,19 +1992,6 @@ function handleAddFriendSubmit() {
 
   if (input) input.value = "";
   showToast(`Roommate '${name}' added to room! 🎉`, "success");
-}
-
-function quickFillExpense(title, amount, category) {
-  const titleInput = document.getElementById("modalExpTitle");
-  const amountInput = document.getElementById("modalExpAmount");
-  const categoryInput = document.getElementById("modalExpCategory");
-
-  if (titleInput) titleInput.value = title;
-  if (amountInput) amountInput.value = amount;
-  if (categoryInput) categoryInput.value = category;
-
-  openModal("addExpenseModal");
-  showToast(`Auto-filled: ${title} (₹${amount})`, "info");
 }
 
 function nudgeRoommate(name, amount, item) {
