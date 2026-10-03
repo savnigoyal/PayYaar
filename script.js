@@ -8,7 +8,9 @@ let wallet = { balance: 0, contributions: [], expenses: [] };
 let ious = [];
 let bills = [];
 let activityFeed = [];
+let settlementTransactions = [];
 let roomBudget = 0;
+let activeSettlement = null;
 
 let currentMainTab = "home";
 let currentHostelSubTab = "overview";
@@ -23,6 +25,23 @@ const DEFAULT_WALLET = { balance: 0, contributions: [], expenses: [] };
 const DEFAULT_IOUS = [];
 const DEFAULT_BILLS = [];
 const DEFAULT_ACTIVITY = [];
+
+function createRecordId() {
+  return globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+function escapeHTML(value) {
+  return String(value ?? "").replace(/[&<>"']/g, character => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  })[character]);
+}
+
+function getSharedExpenses() {
+  return expenses.filter(expense => expense.paidBy !== "Room Wallet" && expense.tag !== "Paid from Wallet 💳");
+}
 
 // Helper: Unique list
 function getUniquePeople(people) {
@@ -39,6 +58,7 @@ function getUniquePeople(people) {
 // ==================== INITIALIZATION & AUTH ====================
 
 window.addEventListener("DOMContentLoaded", () => {
+  toggleIOUTypeFields();
   purgeLegacyDummyData();
   loadStoredData();
   renderAllComponents();
@@ -201,7 +221,7 @@ function togglePasswordVisibility(inputId, btn) {
   }
 }
 
-function handleForgotPassword() {
+async function handleForgotPassword() {
   if (!window.__firebase) {
     showToast("Password reset requires Firebase setup. Check index.html for instructions.", "info");
     return;
@@ -211,9 +231,12 @@ function handleForgotPassword() {
     setAuthError("loginError", "Please enter your email address above first.");
     return;
   }
-  // sendPasswordResetEmail is not imported in the module scope, but we can
-  // use a simple email validation here and let Firebase handle it
-  showToast(`Password reset link sent to ${email}! Check your inbox.`, "success");
+  try {
+    await window.__firebase.sendPasswordResetEmail(email);
+    showToast(`Password reset email sent to ${email}.`, "success");
+  } catch (err) {
+    setAuthError("loginError", getFriendlyAuthError(err.code));
+  }
 }
 
 // ---- Login ----
@@ -449,6 +472,9 @@ function loadStoredData() {
 
   const savedActivity = localStorage.getItem("payyaar_v5_activity");
   activityFeed = savedActivity ? JSON.parse(savedActivity) : [...DEFAULT_ACTIVITY];
+
+  const savedSettlements = localStorage.getItem("payyaar_v5_settlements");
+  settlementTransactions = savedSettlements ? JSON.parse(savedSettlements) : [];
 }
 
 function saveData() {
@@ -459,6 +485,7 @@ function saveData() {
   localStorage.setItem("payyaar_v5_ious", JSON.stringify(ious));
   localStorage.setItem("payyaar_v5_bills", JSON.stringify(bills));
   localStorage.setItem("payyaar_v5_activity", JSON.stringify(activityFeed));
+  localStorage.setItem("payyaar_v5_settlements", JSON.stringify(settlementTransactions));
 }
 
 function renderAllComponents() {
@@ -534,26 +561,78 @@ function switchHostelSubTab(subTabName, updateHash = true) {
 }
 
 function populateSelectDropdowns() {
-  const selects = ["paidBy", "tabPaidBy", "modalPaidBy", "stockPurchasedBy", "stockUserSelect", "walletContributor", "iouPerson"];
+  const selects = ["paidBy", "modalPaidBy", "stockPurchasedBy", "stockUserSelect", "walletContributor", "iouBorrower", "iouLender"];
+  const peopleList = getUniquePeople([...(currentUser ? [currentUser.name] : []), ...friends]);
   selects.forEach(id => {
     const el = document.getElementById(id);
     if (!el) return;
     const curr = el.value;
     el.innerHTML = "";
 
-    const userPerson = currentUser ? currentUser.name : "You";
-    const peopleList = getUniquePeople([userPerson, ...friends]);
-
     peopleList.forEach(f => {
       const sel = f === curr ? "selected" : "";
       el.innerHTML += `<option value="${f}" ${sel}>${f}</option>`;
     });
   });
+
+  const borrowerSelect = document.getElementById("iouBorrower");
+  const lenderSelect = document.getElementById("iouLender");
+  if (borrowerSelect && currentUser) borrowerSelect.value = currentUser.name;
+  if (lenderSelect && friends.length > 0) {
+    lenderSelect.value = friends.find(person => person !== currentUser?.name) || friends[0];
+  }
+}
+
+function renderExpenseSplitParticipants() {
+  const container = document.getElementById("expenseSplitParticipants");
+  if (!container) return;
+  container.replaceChildren();
+
+  const participants = getUniquePeople([...(currentUser ? [currentUser.name] : []), ...friends]);
+  if (participants.length === 0) {
+    const empty = document.createElement("p");
+    empty.className = "col-span-2 text-xs text-on-surface-variant";
+    empty.textContent = "Add room members before recording a shared split.";
+    container.append(empty);
+    return;
+  }
+
+  participants.forEach((person, index) => {
+    const label = document.createElement("label");
+    label.className = "flex items-center gap-2 rounded-lg bg-surface-container-low px-3 py-2 text-xs text-on-surface";
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.name = "expenseSplitParticipant";
+    checkbox.value = person;
+    checkbox.checked = true;
+    checkbox.className = "h-4 w-4 accent-primary";
+    checkbox.id = `expenseSplitParticipant-${index}`;
+    const text = document.createElement("span");
+    text.textContent = person;
+    label.htmlFor = checkbox.id;
+    label.append(checkbox, text);
+    container.append(label);
+  });
+}
+
+function toggleIOUTypeFields() {
+  const type = document.getElementById("iouType")?.value || "Money";
+  const amountGroup = document.getElementById("iouAmountGroup");
+  const detailsGroup = document.getElementById("iouDetailsGroup");
+  const amountInput = document.getElementById("iouAmount");
+  const detailsInput = document.getElementById("iouItemOrAmount");
+  const isMoney = type === "Money";
+
+  amountGroup?.classList.toggle("hidden", !isMoney);
+  detailsGroup?.classList.toggle("hidden", isMoney);
+  if (amountInput) amountInput.required = isMoney;
+  if (detailsInput) detailsInput.required = !isMoney;
 }
 
 // ==================== 1. HOME VIEW RENDERER ====================
 
 function renderHomeView() {
+  const sharedExpenses = getSharedExpenses();
   // Avatars row
   const avRow = document.getElementById("homeAvatarsRow");
   if (avRow) {
@@ -574,7 +653,7 @@ function renderHomeView() {
   if (activeBadge) activeBadge.innerText = `${friends.length} Members`;
 
   // Hero total
-  const totalSpent = expenses.reduce((sum, e) => sum + e.amount, 0);
+  const totalSpent = sharedExpenses.reduce((sum, e) => sum + e.amount, 0);
   const homeTotalExpenses = document.getElementById("homeTotalExpenses");
   if (homeTotalExpenses) homeTotalExpenses.innerText = `₹${totalSpent.toLocaleString()}`;
 
@@ -589,7 +668,7 @@ function renderHomeView() {
   const homeNetShare = document.getElementById("homeNetShare");
   const homeNetStatus = document.getElementById("homeNetStatus");
 
-  if (expenses.length === 0) {
+  if (sharedExpenses.length === 0) {
     if (homeNetShare) homeNetShare.innerText = "₹0";
     if (homeNetStatus) {
       homeNetStatus.className = "font-label-sm text-xs text-primary-fixed font-medium truncate";
@@ -669,9 +748,9 @@ function renderHostelOverview() {
   if (hubActiveIOUsCount) hubActiveIOUsCount.innerText = `${pendingIOUsCount}`;
 
   // 6 Nav Card Summaries
-  const totalExpensesAmount = expenses.reduce((s, e) => s + e.amount, 0);
+  const totalExpensesAmount = getSharedExpenses().reduce((s, e) => s + e.amount, 0);
   const hubNavExpensesSummary = document.getElementById("hubNavExpensesSummary");
-  if (hubNavExpensesSummary) hubNavExpensesSummary.innerText = `₹${totalExpensesAmount.toLocaleString()} this month`;
+  if (hubNavExpensesSummary) hubNavExpensesSummary.innerText = `₹${totalExpensesAmount.toLocaleString()} all-time`;
 
   const hubNavStockSummary = document.getElementById("hubNavStockSummary");
   if (hubNavStockSummary) hubNavStockSummary.innerText = `${stock.length} item${stock.length === 1 ? '' : 's'}`;
@@ -688,25 +767,26 @@ function renderHostelOverview() {
 
   const hubNavActivitySummary = document.getElementById("hubNavActivitySummary");
   if (hubNavActivitySummary) {
-    hubNavActivitySummary.innerText = activityFeed.length > 0 ? `${activityFeed[0].time}` : "Real-time room log";
+    hubNavActivitySummary.innerText = activityFeed[0]?.time || "No activity yet";
   }
 }
 
 // ==================== DEDICATED HOSTEL SECTION RENDERERS ====================
 
 function renderHostelExpensesView() {
-  const totalSpent = expenses.reduce((s, e) => s + e.amount, 0);
+  const sharedExpenses = getSharedExpenses();
+  const totalSpent = sharedExpenses.reduce((s, e) => s + e.amount, 0);
   const totalMonthEl = document.getElementById("hostelExpensesTotalMonth");
   if (totalMonthEl) totalMonthEl.innerText = `₹${totalSpent.toLocaleString()}`;
 
   const countBadgeEl = document.getElementById("hostelExpensesCountBadge");
-  if (countBadgeEl) countBadgeEl.innerText = `${expenses.length} Expense${expenses.length === 1 ? '' : 's'}`;
+  if (countBadgeEl) countBadgeEl.innerText = `${sharedExpenses.length} Expense${sharedExpenses.length === 1 ? '' : 's'}`;
 
   const container = document.getElementById("hostelExpensesDedicatedList");
   if (!container) return;
 
   container.innerHTML = "";
-  if (expenses.length === 0) {
+  if (sharedExpenses.length === 0) {
     container.innerHTML = `
       <div class="py-12 text-center text-on-surface-variant italic space-y-2">
         <span class="text-4xl block">🍕</span>
@@ -717,8 +797,10 @@ function renderHostelExpensesView() {
     return;
   }
 
-  expenses.forEach(exp => {
-    const icon = exp.category.includes('Food') ? '🍜' : exp.category.includes('Groceries') ? '🛒' : exp.category.includes('Bills') ? '📶' : exp.category.includes('Rent') ? '🧹' : exp.category.includes('Cab') ? '🛵' : '💸';
+  getSharedExpenses().forEach(exp => {
+    const category = String(exp.category || "");
+    const splitBetween = Array.isArray(exp.splitBetween) ? getUniquePeople(exp.splitBetween) : [];
+    const icon = category.includes('Food') ? '🍜' : category.includes('Groceries') ? '🛒' : category.includes('Bills') ? '📶' : category.includes('Rent') ? '🧹' : category.includes('Cab') ? '🛵' : '💸';
     container.innerHTML += `
       <div class="py-3.5 flex items-center justify-between gap-3">
         <div class="flex items-center gap-3 min-w-0">
@@ -726,8 +808,8 @@ function renderHostelExpensesView() {
             ${icon}
           </div>
           <div class="min-w-0">
-            <span class="font-headline-sm text-sm font-bold text-on-surface block truncate">${exp.title}</span>
-            <span class="font-label-sm text-xs text-on-surface-variant truncate block">Paid by ${exp.paidBy} · ${exp.date}</span>
+            <span class="font-headline-sm text-sm font-bold text-on-surface block truncate">${escapeHTML(exp.title)}</span>
+            <span class="font-label-sm text-xs text-on-surface-variant truncate block">Paid by ${escapeHTML(exp.paidBy)} · split ${splitBetween.map(escapeHTML).join(", ") || "members"}</span>
           </div>
         </div>
         <div class="text-right shrink-0">
@@ -758,6 +840,7 @@ function renderRoommateBalancesToContainer(containerId) {
   container.innerHTML = "";
 
   const meName = currentUser ? currentUser.name : "You";
+  const myNet = netBalances[meName] || 0;
   const otherFriends = friends.filter(f => f !== meName);
 
   if (otherFriends.length === 0) {
@@ -776,8 +859,9 @@ function renderRoommateBalancesToContainer(containerId) {
   let index = 0;
   otherFriends.forEach(friend => {
     const net = netBalances[friend] || 0;
-    const isOwedToYou = net >= 0;
-    const displayAmount = Math.abs(Math.round(net));
+    const displayAmount = Math.abs(Math.round(net * 100) / 100);
+    const friendOwesYou = myNet > 0 && net < 0;
+    const youOweFriend = myNet < 0 && net > 0;
     const initial = friend.charAt(0).toUpperCase();
     const avatarColor = bgColors[index % bgColors.length];
     index++;
@@ -794,24 +878,24 @@ function renderRoommateBalancesToContainer(containerId) {
               <span class="font-label-sm text-[10px] text-on-surface-variant bg-surface-container px-1.5 py-0.2 rounded font-medium">Roommate 🤝</span>
             </div>
             <span class="font-label-sm text-xs text-on-surface-variant truncate">
-              ${net === 0 ? "Settled / No Dues" : isOwedToYou ? `Owes ₹${displayAmount}` : `Owes ₹${displayAmount}`}
+              ${net === 0 ? "Settled / No Dues" : friendOwesYou ? `Owes you ₹${displayAmount}` : youOweFriend ? `You owe ₹${displayAmount}` : "Room balance"}
             </span>
           </div>
         </div>
 
         <div class="flex items-center gap-2 shrink-0">
-          <span class="font-headline-sm text-sm md:text-base ${net === 0 ? 'text-on-surface-variant font-semibold' : isOwedToYou ? 'text-tertiary font-bold' : 'text-error font-bold'}">
-            ${net === 0 ? '₹0' : isOwedToYou ? `+₹${displayAmount}` : `-₹${displayAmount}`}
+          <span class="font-headline-sm text-sm md:text-base ${net === 0 ? 'text-on-surface-variant font-semibold' : friendOwesYou ? 'text-tertiary font-bold' : youOweFriend ? 'text-error font-bold' : 'text-on-surface-variant font-semibold'}">
+            ${net === 0 ? '₹0' : friendOwesYou ? `+₹${displayAmount}` : youOweFriend ? `-₹${displayAmount}` : `₹${displayAmount}`}
           </span>
-          ${net !== 0 ? (isOwedToYou ? `
+          ${friendOwesYou ? `
             <button onclick="nudgeRoommate('${friend}', ${displayAmount}, 'Shared Expense')" class="px-2.5 py-1 rounded-lg bg-primary text-on-primary font-label-sm text-xs font-semibold shadow-2xs active:scale-95 transition-all flex items-center gap-1 hover:bg-secondary cursor-pointer">
               <span class="material-symbols-outlined text-[13px]">send</span> Nudge
             </button>
-          ` : `
-            <button onclick="openUPIModal('${friend}', ${displayAmount})" class="px-2.5 py-1 rounded-lg bg-error text-on-error font-label-sm text-xs font-semibold active:scale-95 transition-all flex items-center gap-1 hover:bg-error/90 cursor-pointer">
-              <span class="material-symbols-outlined text-[13px]">bolt</span> Pay UPI
+          ` : youOweFriend ? `
+            <button onclick="openUPIModal('${friend}', ${displayAmount}, '${meName}', '${friend}')" class="px-2.5 py-1 rounded-lg bg-error text-on-error font-label-sm text-xs font-semibold active:scale-95 transition-all flex items-center gap-1 hover:bg-error/90 cursor-pointer">
+              <span class="material-symbols-outlined text-[13px]">payments</span> Mark Paid
             </button>
-          `) : ''}
+          ` : ''}
         </div>
       </div>
     `;
@@ -828,7 +912,7 @@ function renderHostelActivityView() {
     return;
   }
 
-  activityFeed.forEach(item => {
+  [...activityFeed].sort((left, right) => new Date(right.createdAt || 0) - new Date(left.createdAt || 0)).forEach(item => {
     container.innerHTML += `
       <div class="py-3 flex items-center justify-between gap-3">
         <div class="flex items-center gap-3 min-w-0">
@@ -909,13 +993,13 @@ function renderFullStockView() {
         </div>
 
         <div class="flex items-center gap-2 pt-1">
-          <button onclick="openUseStockModal(${item.id})" class="flex-1 py-2 rounded-xl bg-primary text-on-primary font-label-md text-xs font-bold active:scale-95 transition-all shadow-xs hover:bg-secondary cursor-pointer">
+          <button onclick="openUseStockModal('${item.id}')" class="flex-1 py-2 rounded-xl bg-primary text-on-primary font-label-md text-xs font-bold active:scale-95 transition-all shadow-xs hover:bg-secondary cursor-pointer">
             Use 1
           </button>
-          <button onclick="increaseStockQty(${item.id})" class="px-3 py-2 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface font-label-md text-xs font-semibold border border-outline-variant/30 cursor-pointer">
+          <button onclick="increaseStockQty('${item.id}')" class="px-3 py-2 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface font-label-md text-xs font-semibold border border-outline-variant/30 cursor-pointer">
             + Qty
           </button>
-          <button onclick="deleteStockItem(${item.id})" class="p-2 rounded-xl text-outline hover:text-error hover:bg-error-container/40 transition-colors cursor-pointer" title="Delete Item">
+          <button onclick="deleteStockItem('${item.id}')" class="p-2 rounded-xl text-outline hover:text-error hover:bg-error-container/40 transition-colors cursor-pointer" title="Delete Item">
             <span class="material-symbols-outlined text-[18px]">delete</span>
           </button>
         </div>
@@ -947,7 +1031,7 @@ function renderHomeStockPreview() {
             </span>
           </div>
         </div>
-        <button onclick="quickUseStock(${item.id})" class="px-2 py-1 rounded-lg bg-primary text-on-primary font-label-md text-[11px] font-bold shrink-0">
+        <button onclick="quickUseStock('${item.id}')" class="px-2 py-1 rounded-lg bg-primary text-on-primary font-label-md text-[11px] font-bold shrink-0">
           Use
         </button>
       </div>
@@ -958,7 +1042,7 @@ function renderHomeStockPreview() {
 function quickUseStock(id) { openUseStockModal(id); }
 
 function openUseStockModal(id) {
-  activeStockItemToUse = stock.find(s => s.id === id);
+  activeStockItemToUse = stock.find(s => String(s.id) === String(id));
   if (!activeStockItemToUse) return;
 
   const title = document.getElementById("useStockTitle");
@@ -998,7 +1082,7 @@ function confirmUseStockItem() {
 }
 
 function increaseStockQty(id) {
-  const item = stock.find(s => s.id === id);
+  const item = stock.find(s => String(s.id) === String(id));
   if (!item) return;
 
   item.quantity += 1;
@@ -1010,7 +1094,10 @@ function increaseStockQty(id) {
 
 function deleteStockItem(id) {
   if (confirm("Delete this stock item?")) {
-    stock = stock.filter(s => s.id !== id);
+    const item = stock.find(stockItem => String(stockItem.id) === String(id));
+    if (!item) return;
+    stock = stock.filter(stockItem => String(stockItem.id) !== String(id));
+    addActivityLog(`Removed ${item.name} from Common Stock`, "🗑️");
     saveData();
     renderAllComponents();
     showToast("Stock item deleted", "info");
@@ -1025,13 +1112,13 @@ function handleAddStockSubmit() {
   const purchasedByInput = document.getElementById("stockPurchasedBy");
 
   const nameStr = nameInput ? nameInput.value.trim() : "";
-  const qty = qtyInput ? parseInt(qtyInput.value) : 1;
+  const qty = qtyInput ? Number(qtyInput.value) : NaN;
   const unit = unitInput && unitInput.value.trim() !== "" ? unitInput.value.trim() : "units";
-  const cost = costInput ? parseFloat(costInput.value) : 0;
+  const cost = costInput ? Number(costInput.value) : NaN;
   const purchasedBy = purchasedByInput ? purchasedByInput.value : (currentUser ? currentUser.name : "You");
 
-  if (!nameStr) {
-    showToast("Please enter item name", "error");
+  if (!nameStr || !Number.isInteger(qty) || qty <= 0 || !Number.isFinite(cost) || cost < 0) {
+    showToast("Enter an item, a positive whole quantity, and a valid non-negative purchase-cost note.", "error");
     return;
   }
 
@@ -1040,7 +1127,7 @@ function handleAddStockSubmit() {
   const cleanName = nameStr.replace(icon, "").trim() || nameStr;
 
   const newItem = {
-    id: Date.now(),
+    id: createRecordId(),
     name: cleanName,
     icon: icon,
     quantity: qty,
@@ -1053,7 +1140,7 @@ function handleAddStockSubmit() {
   };
 
   stock.unshift(newItem);
-  addActivityLog(`${purchasedBy} added ₹${cost} ${cleanName} to Common Stock`, icon);
+  addActivityLog(`${purchasedBy} added ${qty} ${unit} of ${cleanName} to Common Stock (purchase cost note ₹${cost})`, icon);
 
   saveData();
   renderAllComponents();
@@ -1115,9 +1202,9 @@ function renderFullWalletView() {
     }
 
     const combined = [
-      ...wallet.contributions.map(c => ({ id: c.id || Date.now(), type: 'contrib', title: `${c.person} contributed`, amount: c.amount, date: c.date, icon: '💳', color: 'text-tertiary font-bold' })),
-      ...wallet.expenses.map(e => ({ id: e.id || Date.now(), type: 'expense', title: e.title, amount: e.amount, date: e.date, icon: '💸', color: 'text-error font-bold' }))
-    ].sort((a, b) => b.id - a.id);
+      ...wallet.contributions.map(c => ({ type: 'contrib', title: `${c.person} contributed`, amount: c.amount, date: c.date, icon: '💳', color: 'text-tertiary font-bold' })),
+      ...wallet.expenses.map(e => ({ type: 'expense', title: e.title, amount: e.amount, date: e.date, icon: '💸', color: 'text-error font-bold' }))
+    ].sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
 
     combined.forEach(item => {
       activityList.innerHTML += `
@@ -1143,19 +1230,21 @@ function handleWalletContributionSubmit() {
   const amountInput = document.getElementById("walletContributionAmount");
 
   const person = contributorSelect ? contributorSelect.value : (currentUser ? currentUser.name : "You");
-  const amount = amountInput ? parseFloat(amountInput.value) : NaN;
+  const amount = amountInput ? Number(amountInput.value) : NaN;
 
-  if (isNaN(amount) || amount <= 0) {
+  if (!Number.isFinite(amount) || amount <= 0) {
     showToast("Please enter valid contribution amount", "error");
     return;
   }
+  if (!confirm(`Confirm that ${person} added ₹${amount.toLocaleString()} to the shared Room Wallet?`)) return;
 
   wallet.balance += amount;
   wallet.contributions.unshift({
-    id: Date.now(),
+    id: createRecordId(),
     person,
     amount,
-    date: "Just now"
+    date: new Date().toISOString(),
+    type: "contribution"
   });
 
   addActivityLog(`${person} contributed ₹${amount} to Room Wallet`, "💳");
@@ -1173,9 +1262,9 @@ function handlePayFromWalletSubmit() {
   const amountInput = document.getElementById("walletExpenseAmount");
 
   const title = titleInput ? titleInput.value.trim() : "";
-  const amount = amountInput ? parseFloat(amountInput.value) : NaN;
+  const amount = amountInput ? Number(amountInput.value) : NaN;
 
-  if (!title || isNaN(amount) || amount <= 0) {
+  if (!title || !Number.isFinite(amount) || amount <= 0) {
     showToast("Please enter expense purpose & amount", "error");
     return;
   }
@@ -1185,24 +1274,15 @@ function handlePayFromWalletSubmit() {
     return;
   }
 
+  if (!confirm(`Withdraw ₹${amount.toLocaleString()} from the room wallet for ${title}? This will not create a shared expense or roommate debt.`)) return;
+
   wallet.balance -= amount;
   wallet.expenses.unshift({
-    id: Date.now(),
+    id: createRecordId(),
     title,
     amount,
-    paidBy: "Room Wallet",
-    date: "Just now"
-  });
-
-  expenses.unshift({
-    id: Date.now(),
-    title: `[Wallet] ${title}`,
-    amount,
-    paidBy: "Room Wallet",
-    category: "Wi-Fi & Bills",
-    splitBetween: [...friends],
-    date: "Just now",
-    tag: "Paid from Wallet 💳"
+    date: new Date().toISOString(),
+    type: "withdrawal"
   });
 
   addActivityLog(`Paid ₹${amount} '${title}' from Room Wallet`, "💸");
@@ -1228,14 +1308,15 @@ function renderFullIOUsView() {
   let countYouOwe = 0;
 
   ious.filter(i => i.status === "Pending").forEach(iou => {
-    const isYouDebtor = iou.person === meName;
-    const num = parseFloat((iou.itemOrAmount || "").replace(/[^0-9.]/g, ""));
-    if (!isYouDebtor) {
-      countOwedToYou++;
-      if (!isNaN(num)) totalOwedToYou += num;
-    } else {
+    const borrower = iou.borrower || iou.person || "Roommate";
+    const lender = iou.lender || (borrower !== meName ? meName : "Roommate");
+    const amount = getIOUMoneyAmount(iou);
+    if (borrower === meName) {
       countYouOwe++;
-      if (!isNaN(num)) totalYouOwe += num;
+      totalYouOwe += amount;
+    } else if (lender === meName) {
+      countOwedToYou++;
+      totalOwedToYou += amount;
     }
   });
 
@@ -1280,6 +1361,10 @@ function renderFullIOUsView() {
   filteredIOUs.forEach(iou => {
     const isSettled = iou.status === "Settled";
     const icon = typeIcons[iou.type] || "📌";
+    const borrower = iou.borrower || iou.person || "Roommate";
+    const lender = iou.lender || (borrower !== meName ? meName : "Roommate");
+    const dueLabel = iou.dueDate ? ` · Due ${iou.dueDate}` : "";
+    const itemLabel = iou.type === "Money" ? `₹${getIOUMoneyAmount(iou).toLocaleString()}` : iou.itemOrAmount;
 
     container.innerHTML += `
       <div class="rounded-2xl bg-surface-container-lowest p-5 shadow-sm border border-outline-variant/20 space-y-3 flex flex-col justify-between hover:border-primary/40 transition-all">
@@ -1288,8 +1373,8 @@ function renderFullIOUsView() {
             <div class="flex items-center gap-2">
               <span class="text-2xl">${icon}</span>
               <div>
-                <h3 class="font-headline-sm text-base font-bold text-on-surface">${iou.person}</h3>
-                <span class="font-label-sm text-[11px] text-on-surface-variant">${iou.type} IOU · Due ${iou.dueDate || 'Soon'}</span>
+                <h3 class="font-headline-sm text-base font-bold text-on-surface">${borrower} owes ${lender}</h3>
+                <span class="font-label-sm text-[11px] text-on-surface-variant">Personal ${iou.type} borrowing${dueLabel}</span>
               </div>
             </div>
             ${isSettled ? `
@@ -1304,25 +1389,26 @@ function renderFullIOUsView() {
           </div>
 
           <div class="p-3 rounded-xl bg-surface-container-low space-y-1">
-            <span class="font-headline-sm text-sm font-bold text-on-surface block">${iou.itemOrAmount}</span>
+            <span class="font-headline-sm text-sm font-bold text-on-surface block">${itemLabel}</span>
             ${iou.description ? `<span class="font-body-sm text-xs text-on-surface-variant block">${iou.description}</span>` : ""}
           </div>
         </div>
 
         <div class="flex items-center gap-2 pt-1">
           ${!isSettled ? `
-            <button onclick="nudgeIOU('${iou.person}', '${iou.itemOrAmount}')" class="flex-1 py-2 rounded-xl bg-primary text-on-primary font-label-md text-xs font-bold active:scale-95 transition-all shadow-xs flex items-center justify-center gap-1">
+            <button onclick="nudgeIOU('${borrower}', '${itemLabel}')" class="flex-1 py-2 rounded-xl bg-primary text-on-primary font-label-md text-xs font-bold active:scale-95 transition-all shadow-xs flex items-center justify-center gap-1">
               <span class="material-symbols-outlined text-[13px]">send</span> Remind
             </button>
-            <button onclick="settleIOU(${iou.id})" class="flex-1 py-2 rounded-xl bg-tertiary text-on-tertiary font-label-md text-xs font-bold active:scale-95 transition-all shadow-xs">
-              Settle
+            <button onclick="settleIOU('${iou.id}', 'personal')" class="flex-1 py-2 rounded-xl bg-tertiary text-on-tertiary font-label-md text-xs font-bold active:scale-95 transition-all shadow-xs">
+              Mark repaid
             </button>
+            ${iou.type === "Money" ? `<button onclick="settleIOU('${iou.id}', 'wallet')" class="flex-1 py-2 rounded-xl bg-surface-container text-on-surface font-label-md text-xs font-bold active:scale-95 transition-all">Repay from wallet</button>` : ""}
           ` : `
             <span class="text-xs text-tertiary font-bold flex items-center gap-1">
               <span class="material-symbols-outlined text-[14px]">done_all</span> Returned & Settled
             </span>
           `}
-          <button onclick="deleteIOU(${iou.id})" class="p-2 rounded-xl text-outline hover:text-error hover:bg-error-container/40 transition-colors" title="Delete IOU">
+          <button onclick="deleteIOU('${iou.id}')" class="p-2 rounded-xl text-outline hover:text-error hover:bg-error-container/40 transition-colors" title="Delete IOU">
             <span class="material-symbols-outlined text-[18px]">delete</span>
           </button>
         </div>
@@ -1345,50 +1431,111 @@ function filterIOUs(type, btn) {
 
 function handleAddIOUSubmit() {
   const typeSelect = document.getElementById("iouType");
-  const personSelect = document.getElementById("iouPerson");
+  const borrowerSelect = document.getElementById("iouBorrower");
+  const lenderSelect = document.getElementById("iouLender");
+  const amountInput = document.getElementById("iouAmount");
   const itemInput = document.getElementById("iouItemOrAmount");
   const descInput = document.getElementById("iouDescription");
+  const dueDateInput = document.getElementById("iouDueDate");
 
   const type = typeSelect ? typeSelect.value : "Money";
-  const person = personSelect ? personSelect.value : "Roommate";
+  const borrower = borrowerSelect ? borrowerSelect.value : "";
+  const lender = lenderSelect ? lenderSelect.value : "";
+  const amount = amountInput ? Number(amountInput.value) : NaN;
   const itemOrAmount = itemInput ? itemInput.value.trim() : "";
   const description = descInput ? descInput.value.trim() : "";
+  const dueDate = dueDateInput ? dueDateInput.value : "";
 
-  if (!itemOrAmount) {
-    showToast("Please enter item or amount", "error");
+  if (!borrower || !lender || borrower === lender) {
+    showToast("Choose two different roommates for borrower and lender.", "error");
+    return;
+  }
+  if (type === "Money" && (!Number.isFinite(amount) || amount <= 0)) {
+    showToast("Enter a valid positive amount for this money IOU.", "error");
+    return;
+  }
+  if (type !== "Money" && !itemOrAmount) {
+    showToast("Describe the personal item or food being borrowed.", "error");
     return;
   }
 
   const newIOU = {
-    id: Date.now(),
+    id: createRecordId(),
     type,
-    person,
+    borrower,
+    lender,
+    person: borrower,
+    amount: type === "Money" ? Math.round(amount * 100) / 100 : null,
     itemOrAmount,
     description,
     status: "Pending",
-    dueDate: "Soon",
-    date: "Just now"
+    dueDate,
+    date: new Date().toISOString()
   };
 
   ious.unshift(newIOU);
-  addActivityLog(`Recorded IOU: ${person} owes ${itemOrAmount}`, "📌");
+  addActivityLog(`Recorded personal ${type.toLowerCase()} IOU: ${borrower} owes ${lender}${type === "Money" ? ` ₹${amount}` : ` ${itemOrAmount}`}`, "📌");
 
   saveData();
   renderAllComponents();
   closeModal("addIOUModal");
 
   if (itemInput) itemInput.value = "";
+  if (amountInput) amountInput.value = "";
   if (descInput) descInput.value = "";
+  if (dueDateInput) dueDateInput.value = "";
 
-  showToast(`IOU recorded for ${person}! 📌`, "success");
+  showToast(`IOU recorded: ${borrower} owes ${lender}. 📌`, "success");
 }
 
-function settleIOU(id) {
-  const item = ious.find(i => i.id === id);
-  if (!item) return;
+function getIOUMoneyAmount(iou) {
+  if (Number.isFinite(Number(iou.amount)) && Number(iou.amount) > 0) return Number(iou.amount);
+  if (iou.type !== "Money") return 0;
+  const match = String(iou.itemOrAmount || "").match(/^\s*₹?\s*(\d+(?:\.\d{1,2})?)\s*$/);
+  return match ? Number(match[1]) : 0;
+}
+
+function settleIOU(id, repaymentMethod = "personal") {
+  const item = ious.find(i => String(i.id) === String(id));
+  if (!item || item.status === "Settled") return;
+
+  const borrower = item.borrower || item.person || "Roommate";
+  const lender = item.lender || (borrower !== currentUser?.name ? currentUser?.name : "Roommate");
+  const amount = getIOUMoneyAmount(item);
+
+  if (repaymentMethod === "wallet") {
+    if (item.type !== "Money" || amount <= 0) {
+      showToast("Only money IOUs with a valid amount can be repaid from the wallet.", "error");
+      return;
+    }
+    if (wallet.balance < amount) {
+      showToast(`Insufficient wallet funds. Available: ₹${wallet.balance.toLocaleString()}.`, "error");
+      return;
+    }
+    if (!confirm(`Use ₹${amount.toLocaleString()} from the room wallet to repay ${borrower}'s IOU to ${lender}?`)) return;
+    wallet.balance -= amount;
+    wallet.expenses.unshift({
+      id: createRecordId(),
+      title: `IOU repayment: ${borrower} to ${lender}`,
+      amount,
+      date: new Date().toISOString(),
+      type: "iou-repayment",
+      linkedIOUId: item.id,
+      borrower,
+      lender
+    });
+  } else {
+    if (!confirm(`Record ${borrower}'s repayment of ${item.type === "Money" ? `₹${amount.toLocaleString()}` : item.itemOrAmount} to ${lender}?`)) return;
+    if (item.type === "Money" && amount > 0 && !recordSettlement(borrower, lender, amount, "IOU repayment", "iou", item.id)) {
+      showToast("This IOU repayment is already recorded.", "warning");
+      return;
+    }
+  }
 
   item.status = "Settled";
-  addActivityLog(`Settled IOU with ${item.person} (${item.itemOrAmount})`, "🤝");
+  item.settledAt = new Date().toISOString();
+  item.repaymentMethod = repaymentMethod;
+  addActivityLog(`${borrower} repaid ${lender}${item.type === "Money" ? ` ₹${amount}` : ` (${item.itemOrAmount})`}${repaymentMethod === "wallet" ? " from the Room Wallet" : ""}`, "🤝");
 
   saveData();
   renderAllComponents();
@@ -1403,7 +1550,10 @@ function nudgeIOU(person, item) {
 
 function deleteIOU(id) {
   if (confirm("Delete this IOU entry?")) {
-    ious = ious.filter(i => i.id !== id);
+    const item = ious.find(iou => String(iou.id) === String(id));
+    if (!item) return;
+    ious = ious.filter(iou => String(iou.id) !== String(id));
+    addActivityLog(`Removed IOU between ${item.borrower || item.person || "roommates"} and ${item.lender || "roommates"}`, "🗑️");
     saveData();
     renderAllComponents();
     showToast("IOU deleted", "info");
@@ -1457,7 +1607,7 @@ function renderFullBillsView() {
 
         <div class="flex items-center gap-2 pt-1">
           ${!isPaid ? `
-            <button onclick="payHostelBill(${bill.id})" class="flex-1 py-2 rounded-xl bg-primary text-on-primary font-label-md text-xs font-bold active:scale-95 transition-all shadow-xs hover:bg-secondary">
+            <button onclick="payHostelBill('${bill.id}')" class="flex-1 py-2 rounded-xl bg-primary text-on-primary font-label-md text-xs font-bold active:scale-95 transition-all shadow-xs hover:bg-secondary">
               Pay & Split Bill
             </button>
           ` : `
@@ -1465,7 +1615,7 @@ function renderFullBillsView() {
               <span class="material-symbols-outlined text-[14px]">done_all</span> Settled for this cycle
             </span>
           `}
-          <button onclick="deleteBill(${bill.id})" class="p-2 rounded-xl text-outline hover:text-error hover:bg-error-container/40 transition-colors" title="Delete Bill">
+          <button onclick="deleteBill('${bill.id}')" class="p-2 rounded-xl text-outline hover:text-error hover:bg-error-container/40 transition-colors" title="Delete Bill">
             <span class="material-symbols-outlined text-[18px]">delete</span>
           </button>
         </div>
@@ -1493,7 +1643,7 @@ function renderHomeBillsPreview() {
           <span class="font-label-sm text-[11px] text-on-surface-variant">Due: ${bill.dueDate} · ₹${bill.amount}</span>
         </div>
         ${!isPaid ? `
-          <button onclick="payHostelBill(${bill.id})" class="px-2.5 py-1 rounded-lg bg-primary text-on-primary font-label-md text-[11px] font-bold shrink-0">
+          <button onclick="payHostelBill('${bill.id}')" class="px-2.5 py-1 rounded-lg bg-primary text-on-primary font-label-md text-[11px] font-bold shrink-0">
             Pay
           </button>
         ` : `
@@ -1510,16 +1660,16 @@ function handleAddBillSubmit() {
   const dueInput = document.getElementById("billDueDate");
 
   const title = titleInput ? titleInput.value.trim() : "";
-  const amount = amountInput ? parseFloat(amountInput.value) : NaN;
+  const amount = amountInput ? Number(amountInput.value) : NaN;
   const dueDate = dueInput ? dueInput.value.trim() : "Monthly";
 
-  if (!title || isNaN(amount) || amount <= 0) {
+  if (!title || !Number.isFinite(amount) || amount <= 0) {
     showToast("Please fill bill title and amount", "error");
     return;
   }
 
   const newBill = {
-    id: Date.now(),
+    id: createRecordId(),
     title,
     amount,
     dueDate,
@@ -1542,21 +1692,25 @@ function handleAddBillSubmit() {
 }
 
 function payHostelBill(id) {
-  const bill = bills.find(b => b.id === id);
-  if (!bill) return;
+  const bill = bills.find(b => String(b.id) === String(id));
+  if (!bill || bill.status === "Paid") return;
 
-  bill.status = "Paid";
   const payer = currentUser ? currentUser.name : "You";
+  if (!confirm(`Mark ${bill.title} as paid by ${payer} for ₹${bill.amount.toLocaleString()} and add one shared expense?`)) {
+    return;
+  }
+  bill.status = "Paid";
 
   expenses.unshift({
-    id: Date.now(),
+    id: createRecordId(),
     title: bill.title,
     amount: bill.amount,
     paidBy: payer,
     category: bill.category || "Wi-Fi & Bills",
     splitBetween: [...friends],
-    date: "Just now",
-    tag: "Bill Paid 📶"
+    date: new Date().toISOString(),
+    tag: "Bill Paid 📶",
+    billId: bill.id
   });
 
   addActivityLog(`${payer} paid ₹${bill.amount} for ${bill.title}`, "📶");
@@ -1568,7 +1722,10 @@ function payHostelBill(id) {
 
 function deleteBill(id) {
   if (confirm("Delete this recurring bill schedule?")) {
-    bills = bills.filter(b => b.id !== id);
+    const bill = bills.find(item => String(item.id) === String(id));
+    if (!bill) return;
+    bills = bills.filter(item => String(item.id) !== String(id));
+    addActivityLog(`Removed recurring bill schedule ${bill.title}`, "🗑️");
     saveData();
     renderAllComponents();
     showToast("Bill schedule removed", "info");
@@ -1581,19 +1738,39 @@ function calculateNetBalances() {
   const netBalances = {};
   friends.forEach(f => netBalances[f] = 0);
 
-  expenses.forEach(exp => {
-    const count = exp.splitBetween.length;
+  getSharedExpenses().forEach(exp => {
+    const splitBetween = Array.isArray(exp.splitBetween) ? getUniquePeople(exp.splitBetween) : [];
+    const count = splitBetween.length;
     if (count === 0) return;
 
-    const share = exp.amount / count;
+    const totalCents = Math.round(exp.amount * 100);
+    const baseShareCents = Math.floor(totalCents / count);
+    const remainderCents = totalCents % count;
 
     if (netBalances[exp.paidBy] === undefined) netBalances[exp.paidBy] = 0;
-    netBalances[exp.paidBy] += exp.amount;
+    netBalances[exp.paidBy] += totalCents / 100;
 
-    exp.splitBetween.forEach(person => {
+    splitBetween.forEach((person, index) => {
       if (netBalances[person] === undefined) netBalances[person] = 0;
-      netBalances[person] -= share;
+      const shareCents = baseShareCents + (index < remainderCents ? 1 : 0);
+      netBalances[person] -= shareCents / 100;
     });
+  });
+
+  settlementTransactions.forEach(payment => {
+    if (!Number.isFinite(payment.amount) || payment.amount <= 0) return;
+    if (netBalances[payment.from] === undefined) netBalances[payment.from] = 0;
+    if (netBalances[payment.to] === undefined) netBalances[payment.to] = 0;
+    netBalances[payment.from] += payment.amount;
+    netBalances[payment.to] -= payment.amount;
+  });
+
+  wallet.expenses.filter(transaction => transaction.type === "iou-repayment" && transaction.linkedIOUId).forEach(payment => {
+    if (!Number.isFinite(payment.amount) || payment.amount <= 0) return;
+    if (netBalances[payment.borrower] === undefined) netBalances[payment.borrower] = 0;
+    if (netBalances[payment.lender] === undefined) netBalances[payment.lender] = 0;
+    netBalances[payment.borrower] += payment.amount;
+    netBalances[payment.lender] -= payment.amount;
   });
 
   return netBalances;
@@ -1601,39 +1778,61 @@ function calculateNetBalances() {
 
 function calculateSmartSettlementPlan() {
   const netBalances = calculateNetBalances();
+  const balances = Object.entries(netBalances)
+    .map(([name, amount]) => ({ name, cents: Math.round(amount * 100) }))
+    .filter(person => person.cents !== 0);
+  if (balances.length === 0) return [];
 
-  const creditors = [];
-  const debtors = [];
-
-  for (let person in netBalances) {
-    const amount = parseFloat(netBalances[person].toFixed(2));
-    if (amount > 0.01) {
-      creditors.push({ name: person, amount: amount });
-    } else if (amount < -0.01) {
-      debtors.push({ name: person, amount: Math.abs(amount) });
+  if (balances.length > 12) {
+    const debtors = balances.filter(person => person.cents < 0).sort((a, b) => a.cents - b.cents);
+    const creditors = balances.filter(person => person.cents > 0).sort((a, b) => b.cents - a.cents);
+    const plan = [];
+    let debtorIndex = 0;
+    let creditorIndex = 0;
+    while (debtorIndex < debtors.length && creditorIndex < creditors.length) {
+      const cents = Math.min(-debtors[debtorIndex].cents, creditors[creditorIndex].cents);
+      plan.push({ from: debtors[debtorIndex].name, to: creditors[creditorIndex].name, amount: cents / 100 });
+      debtors[debtorIndex].cents += cents;
+      creditors[creditorIndex].cents -= cents;
+      if (debtors[debtorIndex].cents === 0) debtorIndex++;
+      if (creditors[creditorIndex].cents === 0) creditorIndex++;
     }
+    return plan;
   }
 
-  const settlements = [];
-  const creditorsCopy = creditors.map(c => ({ ...c }));
-  const debtorsCopy = debtors.map(d => ({ ...d }));
+  let bestPlan = null;
+  const plan = [];
+  const search = startIndex => {
+    let first = startIndex;
+    while (first < balances.length && balances[first].cents === 0) first++;
+    if (first === balances.length) {
+      if (bestPlan === null || plan.length < bestPlan.length) bestPlan = plan.slice();
+      return;
+    }
+    if (bestPlan && plan.length >= bestPlan.length) return;
 
-  debtorsCopy.forEach(debtor => {
-    creditorsCopy.forEach(creditor => {
-      if (debtor.amount > 0.01 && creditor.amount > 0.01) {
-        const settleAmount = Math.min(debtor.amount, creditor.amount);
-        settlements.push({
-          from: debtor.name,
-          to: creditor.name,
-          amount: Math.round(settleAmount)
-        });
-        debtor.amount -= settleAmount;
-        creditor.amount -= settleAmount;
-      }
-    });
-  });
+    const seenBalances = new Set();
+    for (let index = first + 1; index < balances.length; index++) {
+      if (balances[first].cents * balances[index].cents >= 0 || seenBalances.has(balances[index].cents)) continue;
+      seenBalances.add(balances[index].cents);
 
-  return settlements;
+      const amountCents = Math.min(Math.abs(balances[first].cents), Math.abs(balances[index].cents));
+      const firstWasDebtor = balances[first].cents < 0;
+      const indexWasDebtor = balances[index].cents < 0;
+      const from = firstWasDebtor ? balances[first] : balances[index];
+      const to = firstWasDebtor ? balances[index] : balances[first];
+      balances[first].cents += firstWasDebtor ? amountCents : -amountCents;
+      balances[index].cents += indexWasDebtor ? amountCents : -amountCents;
+      plan.push({ from: from.name, to: to.name, amount: amountCents / 100 });
+      search(first);
+      plan.pop();
+      balances[first].cents -= firstWasDebtor ? amountCents : -amountCents;
+      balances[index].cents -= indexWasDebtor ? amountCents : -amountCents;
+    }
+  };
+
+  search(0);
+  return bestPlan || [];
 }
 
 function renderSmartSettlementContainer(containerId, badgeId) {
@@ -1682,8 +1881,8 @@ function renderSmartSettlementContainer(containerId, badgeId) {
         <div class="flex items-center gap-2">
           <span class="font-headline-sm text-sm font-bold text-on-surface">₹${item.amount.toLocaleString()}</span>
           ${isYouFrom ? `
-            <button onclick="openUPIModal('${item.to}', ${item.amount})" class="px-2.5 py-1 rounded-lg bg-error text-on-error font-label-md text-[11px] font-bold active:scale-95 transition-all">
-              Pay UPI
+            <button onclick="openUPIModal('${item.to}', ${item.amount}, '${item.from}', '${item.to}')" class="px-2.5 py-1 rounded-lg bg-error text-on-error font-label-md text-[11px] font-bold active:scale-95 transition-all">
+              Mark Paid
             </button>
           ` : isYouTo ? `
             <button onclick="nudgeRoommate('${item.from}', ${item.amount}, 'Smart Settlement Transfer')" class="px-2.5 py-1 rounded-lg bg-primary text-on-primary font-label-md text-[11px] font-bold active:scale-95 transition-all">
@@ -1710,6 +1909,7 @@ function renderRoommateBalances() {
   container.innerHTML = "";
 
   const meName = currentUser ? currentUser.name : "You";
+  const myNet = netBalances[meName] || 0;
   const otherFriends = friends.filter(f => f !== meName);
 
   if (otherFriends.length === 0) {
@@ -1728,8 +1928,9 @@ function renderRoommateBalances() {
   let index = 0;
   otherFriends.forEach(friend => {
     const net = netBalances[friend] || 0;
-    const isOwedToYou = net >= 0;
-    const displayAmount = Math.abs(Math.round(net));
+    const displayAmount = Math.abs(Math.round(net * 100) / 100);
+    const friendOwesYou = myNet > 0 && net < 0;
+    const youOweFriend = myNet < 0 && net > 0;
     const initial = friend.charAt(0).toUpperCase();
     const avatarColor = bgColors[index % bgColors.length];
     index++;
@@ -1746,24 +1947,24 @@ function renderRoommateBalances() {
               <span class="font-label-sm text-[10px] text-on-surface-variant bg-surface-container px-1.5 py-0.2 rounded font-medium">Roommate 🤝</span>
             </div>
             <span class="font-label-sm text-xs text-on-surface-variant truncate">
-              ${net === 0 ? "Settled / No Dues" : isOwedToYou ? `Owes ₹${displayAmount}` : `Owes ₹${displayAmount}`}
+              ${net === 0 ? "Settled / No Dues" : friendOwesYou ? `Owes you ₹${displayAmount}` : youOweFriend ? `You owe ₹${displayAmount}` : "Room balance"}
             </span>
           </div>
         </div>
 
         <div class="flex items-center gap-2 shrink-0">
-          <span class="font-headline-sm text-sm md:text-base ${net === 0 ? 'text-on-surface-variant font-semibold' : isOwedToYou ? 'text-tertiary font-bold' : 'text-error font-bold'}">
-            ${net === 0 ? '₹0' : isOwedToYou ? `+₹${displayAmount}` : `-₹${displayAmount}`}
+          <span class="font-headline-sm text-sm md:text-base ${net === 0 ? 'text-on-surface-variant font-semibold' : friendOwesYou ? 'text-tertiary font-bold' : youOweFriend ? 'text-error font-bold' : 'text-on-surface-variant font-semibold'}">
+            ${net === 0 ? '₹0' : friendOwesYou ? `+₹${displayAmount}` : youOweFriend ? `-₹${displayAmount}` : `₹${displayAmount}`}
           </span>
-          ${net !== 0 ? (isOwedToYou ? `
+          ${friendOwesYou ? `
             <button onclick="nudgeRoommate('${friend}', ${displayAmount}, 'Shared Expense')" class="px-2.5 py-1 rounded-lg bg-primary text-on-primary font-label-sm text-xs font-semibold shadow-2xs active:scale-95 transition-all flex items-center gap-1 hover:bg-secondary">
               <span class="material-symbols-outlined text-[13px]">send</span> Nudge
             </button>
-          ` : `
-            <button onclick="openUPIModal('${friend}', ${displayAmount})" class="px-2.5 py-1 rounded-lg bg-error text-on-error font-label-sm text-xs font-semibold active:scale-95 transition-all flex items-center gap-1 hover:bg-error/90">
-              <span class="material-symbols-outlined text-[13px]">bolt</span> Pay UPI
+          ` : youOweFriend ? `
+            <button onclick="openUPIModal('${friend}', ${displayAmount}, '${meName}', '${friend}')" class="px-2.5 py-1 rounded-lg bg-error text-on-error font-label-sm text-xs font-semibold active:scale-95 transition-all flex items-center gap-1 hover:bg-error/90">
+              <span class="material-symbols-outlined text-[13px]">payments</span> Mark Paid
             </button>
-          `) : ''}
+          ` : ''}
         </div>
       </div>
     `;
@@ -1773,13 +1974,14 @@ function renderRoommateBalances() {
 // ==================== 7. ACTIVITY FEED ====================
 
 function addActivityLog(text, icon = "📌") {
+  const createdAt = new Date().toISOString();
   activityFeed.unshift({
-    id: Date.now(),
+    id: createRecordId(),
     text,
-    time: "Just now",
+    createdAt,
+    time: new Date(createdAt).toLocaleString(),
     icon
   });
-  if (activityFeed.length > 25) activityFeed.pop();
 }
 
 function renderHomeActivityFeed() {
@@ -1792,7 +1994,7 @@ function renderHomeActivityFeed() {
     return;
   }
 
-  activityFeed.slice(0, 5).forEach(item => {
+  [...activityFeed].sort((left, right) => new Date(right.createdAt || 0) - new Date(left.createdAt || 0)).slice(0, 5).forEach(item => {
     container.innerHTML += `
       <div class="py-3 flex items-center justify-between gap-3">
         <div class="flex items-center gap-3 min-w-0">
@@ -1813,13 +2015,18 @@ function renderFullStatsView() {
 
   const totals = {};
   friends.forEach(f => totals[f] = 0);
-  expenses.forEach(e => {
+  getSharedExpenses().forEach(e => {
     if (totals[e.paidBy] === undefined) totals[e.paidBy] = 0;
     totals[e.paidBy] += e.amount;
   });
 
   const topContrib = Object.keys(totals).length > 0 ? Object.keys(totals).reduce((a, b) => totals[a] > totals[b] ? a : b, friends[0] || "You") : "None";
   const topAmt = totals[topContrib] || 0;
+
+  if (getSharedExpenses().length === 0) {
+    container.innerHTML = `<p class="col-span-full py-10 text-center text-sm text-on-surface-variant">Stats will appear after shared expenses are recorded.</p>`;
+    return;
+  }
 
   container.innerHTML = `
     <div class="rounded-2xl bg-surface-container-lowest p-5 shadow-sm border border-outline-variant/20 space-y-2 text-center">
@@ -1831,30 +2038,30 @@ function renderFullStatsView() {
 
     <div class="rounded-2xl bg-surface-container-lowest p-5 shadow-sm border border-outline-variant/20 space-y-2 text-center">
       <div class="w-12 h-12 rounded-full bg-orange-100 text-orange-700 mx-auto flex items-center justify-center text-2xl">☕</div>
-      <h3 class="font-headline-sm text-sm font-bold text-on-surface">Chai Champion</h3>
-      <p class="font-label-sm text-xs font-semibold text-primary">${friends[0] || 'You'}</p>
-      <span class="font-label-sm text-[11px] text-on-surface-variant block">Top room purchaser</span>
+      <h3 class="font-headline-sm text-sm font-bold text-on-surface">Shared expenses</h3>
+      <p class="font-label-sm text-xs font-semibold text-primary">${getSharedExpenses().length}</p>
+      <span class="font-label-sm text-[11px] text-on-surface-variant block">Recorded purchases</span>
     </div>
 
     <div class="rounded-2xl bg-surface-container-lowest p-5 shadow-sm border border-outline-variant/20 space-y-2 text-center">
       <div class="w-12 h-12 rounded-full bg-blue-100 text-blue-700 mx-auto flex items-center justify-center text-2xl">🧾</div>
-      <h3 class="font-headline-sm text-sm font-bold text-on-surface">Bill King</h3>
-      <p class="font-label-sm text-xs font-semibold text-primary">${friends[0] || 'You'}</p>
-      <span class="font-label-sm text-[11px] text-on-surface-variant block">Recurring bill manager</span>
+      <h3 class="font-headline-sm text-sm font-bold text-on-surface">Total recorded</h3>
+      <p class="font-label-sm text-xs font-semibold text-primary">₹${getSharedExpenses().reduce((sum, expense) => sum + expense.amount, 0).toLocaleString()}</p>
+      <span class="font-label-sm text-[11px] text-on-surface-variant block">All-time shared purchases</span>
     </div>
 
     <div class="rounded-2xl bg-surface-container-lowest p-5 shadow-sm border border-outline-variant/20 space-y-2 text-center">
       <div class="w-12 h-12 rounded-full bg-emerald-100 text-emerald-700 mx-auto flex items-center justify-center text-2xl">🔥</div>
-      <h3 class="font-headline-sm text-sm font-bold text-on-surface">Most Reliable</h3>
-      <p class="font-label-sm text-xs font-semibold text-primary">${currentUser ? currentUser.name : 'You'}</p>
-      <span class="font-label-sm text-[11px] text-tertiary font-bold block">100% settled status</span>
+      <h3 class="font-headline-sm text-sm font-bold text-on-surface">Room wallet</h3>
+      <p class="font-label-sm text-xs font-semibold text-primary">₹${wallet.balance.toLocaleString()}</p>
+      <span class="font-label-sm text-[11px] text-on-surface-variant block">Current available fund</span>
     </div>
 
     <div class="rounded-2xl bg-surface-container-lowest p-5 shadow-sm border border-outline-variant/20 space-y-2 text-center">
       <div class="w-12 h-12 rounded-full bg-purple-100 text-purple-700 mx-auto flex items-center justify-center text-2xl">🛒</div>
-      <h3 class="font-headline-sm text-sm font-bold text-on-surface">Stock Manager</h3>
-      <p class="font-label-sm text-xs font-semibold text-primary">${friends[1] || 'Roommate'}</p>
-      <span class="font-label-sm text-[11px] text-on-surface-variant block">Shared inventory restocker</span>
+      <h3 class="font-headline-sm text-sm font-bold text-on-surface">Common stock</h3>
+      <p class="font-label-sm text-xs font-semibold text-primary">${stock.length} item${stock.length === 1 ? "" : "s"}</p>
+      <span class="font-label-sm text-[11px] text-on-surface-variant block">Current inventory count</span>
     </div>
   `;
 }
@@ -1865,18 +2072,21 @@ function renderExpensesView() {
   const container = document.getElementById("expensesViewList");
   if (!container) return;
 
+  const sharedExpenses = getSharedExpenses();
   container.innerHTML = "";
-  if (expenses.length === 0) {
+  if (sharedExpenses.length === 0) {
     container.innerHTML = `<p class="py-8 text-center text-xs text-on-surface-variant italic">No expenses logged yet.</p>`;
     return;
   }
 
-  expenses.forEach(exp => {
+  sharedExpenses.forEach(exp => {
+    const splitBetween = Array.isArray(exp.splitBetween) ? exp.splitBetween : [];
+    const share = splitBetween.length ? exp.amount / splitBetween.length : 0;
     container.innerHTML += `
       <div class="py-3 flex items-center justify-between gap-2">
         <div>
-          <span class="font-headline-sm text-sm font-bold text-on-surface block">${exp.title}</span>
-          <span class="font-label-sm text-xs text-on-surface-variant">Paid by ${exp.paidBy} · ${exp.date}</span>
+          <span class="font-headline-sm text-sm font-bold text-on-surface block">${escapeHTML(exp.title)}</span>
+          <span class="font-label-sm text-xs text-on-surface-variant">Paid by ${escapeHTML(exp.paidBy)} · Split ${splitBetween.map(escapeHTML).join(", ")} (₹${share.toLocaleString(undefined, { maximumFractionDigits: 2 })} each)</span>
         </div>
         <span class="font-headline-sm text-sm font-bold text-on-surface">₹${exp.amount.toLocaleString()}</span>
       </div>
@@ -1886,7 +2096,11 @@ function renderExpensesView() {
 
 // ==================== MODAL ACTION HANDLERS ====================
 
-function openAddExpenseModal() { openModal("addExpenseModal"); }
+function openAddExpenseModal() {
+  populateSelectDropdowns();
+  renderExpenseSplitParticipants();
+  openModal("addExpenseModal");
+}
 function openAddStockModal() { openModal("addStockModal"); }
 function openAddIOUModal() { openModal("addIOUModal"); }
 function openAddBillModal() { openModal("addBillModal"); }
@@ -1901,23 +2115,28 @@ function handleModalAddExpense() {
   const paidByInput = document.getElementById("modalPaidBy");
 
   const title = titleInput ? titleInput.value.trim() : "";
-  const amount = amountInput ? parseFloat(amountInput.value) : NaN;
+  const amount = amountInput ? Number(amountInput.value) : NaN;
   const category = categoryInput ? categoryInput.value : "Food & Mess";
-  const paidBy = paidByInput ? paidByInput.value : (currentUser ? currentUser.name : "You");
+  const paidBy = paidByInput ? paidByInput.value : "";
+  const splitBetween = [...document.querySelectorAll('input[name="expenseSplitParticipant"]:checked')].map(input => input.value);
 
-  if (!title || isNaN(amount) || amount <= 0) {
-    showToast("Please enter title and valid amount", "error");
+  if (!title || !Number.isFinite(amount) || amount <= 0 || !paidBy) {
+    showToast("Enter an expense title, a valid amount, and choose who paid.", "error");
+    return;
+  }
+  if (splitBetween.length === 0) {
+    showToast("Choose at least one roommate to split this expense.", "error");
     return;
   }
 
   expenses.unshift({
-    id: Date.now(),
+    id: createRecordId(),
     title,
     amount,
     paidBy,
     category,
-    splitBetween: friends.length > 0 ? [...friends] : [paidBy],
-    date: "Just now",
+    splitBetween,
+    date: new Date().toISOString(),
     tag: "Instant Split ⚡"
   });
 
@@ -1929,44 +2148,7 @@ function handleModalAddExpense() {
 
   if (titleInput) titleInput.value = "";
   if (amountInput) amountInput.value = "";
-
-  showToast(`Expense '₹${amount} for ${title}' added! 🎉`, "success");
-}
-
-function handleFormAddExpense() {
-  const titleInput = document.getElementById("tabExpenseTitle");
-  const amountInput = document.getElementById("tabExpenseAmount");
-  const categoryInput = document.getElementById("tabExpenseCategory");
-  const paidByInput = document.getElementById("tabPaidBy");
-
-  const title = titleInput ? titleInput.value.trim() : "";
-  const amount = amountInput ? parseFloat(amountInput.value) : NaN;
-  const category = categoryInput ? categoryInput.value : "Food & Mess";
-  const paidBy = paidByInput ? paidByInput.value : (currentUser ? currentUser.name : "You");
-
-  if (!title || isNaN(amount) || amount <= 0) {
-    showToast("Please enter title and valid amount", "error");
-    return;
-  }
-
-  expenses.unshift({
-    id: Date.now(),
-    title,
-    amount,
-    paidBy,
-    category,
-    splitBetween: friends.length > 0 ? [...friends] : [paidBy],
-    date: "Just now",
-    tag: "Instant Split ⚡"
-  });
-
-  addActivityLog(`${paidBy} logged ₹${amount} '${title}'`, "📝");
-
-  saveData();
-  renderAllComponents();
-
-  if (titleInput) titleInput.value = "";
-  if (amountInput) amountInput.value = "";
+  renderExpenseSplitParticipants();
 
   showToast(`Expense '₹${amount} for ${title}' added! 🎉`, "success");
 }
@@ -1986,6 +2168,7 @@ function handleAddFriendSubmit() {
   }
 
   friends.push(name);
+  addActivityLog(`${name} was added to the room`, "👤");
   saveData();
   renderAllComponents();
   closeModal("addFriendModal");
@@ -2000,26 +2183,63 @@ function nudgeRoommate(name, amount, item) {
   showToast(`WhatsApp reminder copied for ${name}! 📲`, "success");
 }
 
-function openUPIModal(name, amount) {
+function openUPIModal(name, amount, from = currentUser?.name, to = name) {
+  if (!from || !to || from === to || !Number.isFinite(Number(amount)) || Number(amount) <= 0) {
+    showToast("This settlement does not have a valid payer, recipient, and amount.", "error");
+    return;
+  }
+  activeSettlement = { from, to, amount: Number(amount) };
   const content = document.getElementById("upiModalContent");
   if (content) {
     content.innerHTML = `
       <div class="flex items-center justify-between text-on-surface font-semibold text-sm">
-        <span>Paying To:</span>
-        <span class="text-primary font-bold">${name}</span>
+        <span>Pay:</span>
+        <span class="text-primary font-bold">${to}</span>
       </div>
       <div class="flex items-center justify-between text-on-surface font-semibold text-sm">
-        <span>Amount Dues:</span>
-        <span class="text-error font-bold text-lg">₹${amount}</span>
+        <span>From ${from}:</span>
+        <span class="text-error font-bold text-lg">₹${Number(amount).toLocaleString()}</span>
       </div>
     `;
   }
   openModal("upiSettleModal");
 }
 
+function recordSettlement(from, to, amount, method, source = "expense", sourceId = null) {
+  if (!from || !to || from === to || !Number.isFinite(amount) || amount <= 0) return false;
+  if (sourceId !== null && settlementTransactions.some(payment => payment.source === source && payment.sourceId === sourceId)) {
+    return false;
+  }
+
+  settlementTransactions.unshift({
+    id: createRecordId(),
+    from,
+    to,
+    amount: Math.round(amount * 100) / 100,
+    method,
+    source,
+    sourceId,
+    date: new Date().toISOString()
+  });
+  if (source !== "iou") {
+    addActivityLog(`${from} recorded a ₹${amount.toLocaleString()} settlement to ${to} (${method})`, "🤝");
+  }
+  saveData();
+  renderAllComponents();
+  return true;
+}
+
 function confirmUPISettle(method) {
+  if (!activeSettlement) return;
+  const { from, to, amount } = activeSettlement;
+  if (!confirm(`Confirm that ${from} paid ₹${amount.toLocaleString()} to ${to} using ${method}? This records the payment in PayYaar; it does not process the payment.`)) return;
+  if (!recordSettlement(from, to, amount, method)) {
+    showToast("That payment could not be recorded.", "error");
+    return;
+  }
+  activeSettlement = null;
   closeModal("upiSettleModal");
-  showToast(`Redirecting to ${method}... Settlement confirmed! 🎉`, "success");
+  showToast("Payment recorded. Roommate balances have been updated.", "success");
 }
 
 function promptSetBudget() {
@@ -2040,8 +2260,10 @@ function clearAllDataPrompt() {
     ious = [];
     bills = [];
     activityFeed = [];
-    localStorage.clear();
-    if (currentUser) localStorage.setItem("payyaar_v5_user", JSON.stringify(currentUser));
+    settlementTransactions = [];
+    const payyaarKeys = Object.keys(localStorage).filter(key => key.startsWith("payyaar_v5_") || key.startsWith("payyaar_room_"));
+    payyaarKeys.forEach(key => localStorage.removeItem(key));
+    if (currentUser && !window.__firebase) localStorage.setItem("payyaar_v5_user", JSON.stringify(currentUser));
     saveData();
     renderAllComponents();
     showToast("All room data cleared!", "info");

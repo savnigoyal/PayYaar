@@ -1,31 +1,26 @@
 # PayYaar
 
-PayYaar is a simple expense-splitting web app made for hostel groups, roommates, friends, and small shared-expense circles. It helps users create a group, add friends, record expenses, split bills between selected members, track total spending, set a group budget, and see who owes whom.
+PayYaar is a browser-based expense and room-operations app for hostel groups and roommates. Shared expenses, physical inventory, personal IOUs, the real room fund, settlements, and activity are kept in separate workflows.
 
 ## Features
 
-- Create an expense group.
-- Add friends to the group.
-- Prevent duplicate friend names.
-- Add expenses with title, amount, payer, and split members.
-- Split an expense between all members or selected members.
-- Calculate each person's share automatically.
-- Show simplified balances, such as `Savni owes Sharad ₹6250`.
-- Track total group expenses.
-- Set a group budget and see budget warnings.
-- Save friends and expenses in browser local storage.
+- Add room members and prevent duplicate names.
+- Record one shared expense with a payer and selected equal-split members.
+- Calculate each person's share and suggest a minimum-transfer settlement plan.
+- Track physical shared stock without creating roommate debts.
+- Record personal money/item IOUs with borrower, lender, optional due date, and repayment status.
+- Track actual Room Wallet contributions and withdrawals separately from shared expenses.
+- Review a chronological, read-only activity log.
+- Save app data in browser local storage; Firebase is used for authentication only.
 - Responsive layout for laptop, tablet, and mobile.
 
 ## How It Works
 
-1. Add all group members in the **Add Friend** section.
-2. Add an expense by entering the expense title and amount.
-3. Select who paid for the expense.
-4. Choose how to split it:
-   - Select **All** to split between every member.
-   - Or select individual members manually.
-5. Click **Add Expense**.
-6. PayYaar updates the expense history, total expenses, and balances automatically.
+1. Add roommates from the Hostel overview.
+2. Record shared purchases in **Expenses**, selecting the payer and who shares the cost.
+3. Use **Common Stock** for quantities and item consumption, not debts.
+4. Use **IOUs** only for personal borrowing; use **Room Wallet** only for money actually entering or leaving the shared fund.
+5. Review suggested transfers in **Settle Up**. After paying outside PayYaar, confirm the payment so balances recalculate.
 
 ## Expense Splitting Logic
 
@@ -44,8 +39,8 @@ If `₹15000` is split between `Savni`, `Sharad`, `Samyak`, and `Sujata`, each p
 - HTML
 - CSS
 - JavaScript
-- Firebase Firestore for group creation
-- Browser localStorage for friends and expenses
+- Firebase Authentication for sign-in
+- Browser localStorage for room members, expenses, stock, IOUs, wallet transactions, settlements, bills, and activity
 
 ## Project Files
 
@@ -81,9 +76,10 @@ Then open the local URL shown in the terminal.
 
 ## Notes
 
-- Expense data is stored in the user's browser using localStorage.
-- Clearing browser storage will remove saved friends and expenses.
-- Group creation uses Firebase Firestore.
+- App records are stored locally in this browser; Firebase currently provides authentication only. There is no Firestore/database synchronization or shared cross-device room store in this project.
+- Roommate settlement records reflect payments the user confirms after paying externally. PayYaar does not process UPI or cash payments.
+- Room Wallet withdrawals are not added to the shared-expense ledger. Wallet-funded IOU repayments are linked to one wallet transaction.
+- Reset Room Data removes only PayYaar localStorage keys and preserves unrelated data for this site.
 
 ## Author
 

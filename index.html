@@ -99,6 +99,7 @@
         createUserWithEmailAndPassword,
         signInWithPopup,
         GoogleAuthProvider,
+        sendPasswordResetEmail,
         signOut,
         updateProfile
       } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -144,6 +145,7 @@
             signInWithEmailAndPassword: (e, p) => signInWithEmailAndPassword(auth, e, p),
             createUserWithEmailAndPassword: (e, p) => createUserWithEmailAndPassword(auth, e, p),
                         signInWithPopup: () => signInWithPopup(auth, googleProvider),
+                        sendPasswordResetEmail: email => sendPasswordResetEmail(auth, email),
             signOut: () => signOut(auth),
             updateProfile: (u, data) => updateProfile(u, data)
           };
@@ -413,7 +415,7 @@
                             <div class="relative flex items-center justify-between">
                                 <div class="flex items-center gap-2 text-primary-fixed">
                                     <span class="material-symbols-outlined text-[20px]">account_balance</span>
-                                    <span class="font-label-md tracking-wider uppercase font-semibold text-xs">Total Group Expenses</span>
+                                    <span class="font-label-md tracking-wider uppercase font-semibold text-xs">Shared Expense Total</span>
                                 </div>
                                 <span class="px-3 py-1 rounded-full bg-primary-container text-on-primary font-label-sm text-xs font-semibold" id="homeTotalBadge">
                                     ₹0 total
@@ -422,7 +424,7 @@
                             
                             <div class="relative flex items-baseline gap-2">
                                 <span class="font-currency-display text-4xl md:text-5xl text-on-primary tracking-tight font-extrabold" id="homeTotalExpenses">₹0</span>
-                                <span class="font-body-sm text-body-sm text-primary-fixed">total spent</span>
+                                <span class="font-body-sm text-body-sm text-primary-fixed">all-time</span>
                             </div>
 
                             <!-- Secondary Metrics Row -->
@@ -444,25 +446,6 @@
                                 </div>
                             </div>
 
-                            <!-- 4 Fast Action Buttons -->
-                            <div class="relative grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
-                                <button onclick="openAddExpenseModal()" class="h-11 rounded-xl bg-surface-container-lowest text-primary font-label-md text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm active:scale-95 hover:bg-surface-container-low transition-all">
-                                    <span class="material-symbols-outlined text-[18px]">add</span>
-                                    Expense
-                                </button>
-                                <button onclick="openAddStockModal()" class="h-11 rounded-xl bg-primary-container text-on-primary font-label-md text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm active:scale-95 hover:bg-secondary-container transition-all">
-                                    <span class="material-symbols-outlined text-[18px]">inventory_2</span>
-                                    Stock
-                                </button>
-                                <button onclick="openAddIOUModal()" class="h-11 rounded-xl bg-primary-container text-on-primary font-label-md text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm active:scale-95 hover:bg-secondary-container transition-all">
-                                    <span class="material-symbols-outlined text-[18px]">handshake</span>
-                                    IOU
-                                </button>
-                                <button onclick="openAddWalletContributionModal()" class="h-11 rounded-xl bg-tertiary text-on-tertiary font-label-md text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm active:scale-95 hover:bg-tertiary-container transition-all">
-                                    <span class="material-symbols-outlined text-[18px]">account_balance_wallet</span>
-                                    Wallet
-                                </button>
-                            </div>
                         </div>
 
                         <!-- Smart Settlement Minimal Transfer Card -->
@@ -501,7 +484,7 @@
                                     </div>
                                     <div>
                                         <h2 class="font-headline-sm text-base text-on-surface font-bold">Roommate Balances</h2>
-                                        <p class="font-label-sm text-xs text-on-surface-variant">Zero awkwardness · Settle via UPI</p>
+                                        <p class="font-label-sm text-xs text-on-surface-variant">Balances from shared expenses and confirmed payments</p>
                                     </div>
                                 </div>
                                 <span class="font-label-sm text-xs text-tertiary font-semibold bg-tertiary-fixed/30 px-2.5 py-1 rounded-full" id="roommateNetOwedBanner">
@@ -566,10 +549,10 @@
                             </div>
                             <div>
                                 <h2 class="font-headline-sm text-base text-on-surface font-bold">Hostel Activity Feed</h2>
-                                <p class="font-label-sm text-xs text-on-surface-variant">Real-time room actions & updates</p>
+                                <p class="font-label-sm text-xs text-on-surface-variant">Recent recorded actions across modules</p>
                             </div>
                         </div>
-                        <span class="font-label-sm text-xs text-on-surface-variant font-medium">Live Feed ⚡</span>
+                        <span class="font-label-sm text-xs text-on-surface-variant font-medium">Read-only</span>
                     </div>
 
                     <div class="flex flex-col divide-y divide-surface-container pt-1" id="homeActivityFeed">
@@ -641,10 +624,10 @@
                             </div>
                             <div>
                                 <h3 class="font-headline-sm text-base font-bold text-on-surface group-hover:text-primary transition-colors">Expenses</h3>
-                                <p class="font-body-sm text-xs text-on-surface-variant mt-0.5">Track and split room expenses</p>
+                                <p class="font-body-sm text-xs text-on-surface-variant mt-0.5">Record shared purchases, choose who paid, and split shares.</p>
                             </div>
                             <div class="pt-2 border-t border-outline-variant/15 flex items-center justify-between font-label-sm text-xs">
-                                <span class="font-semibold text-primary" id="hubNavExpensesSummary">₹0 this month</span>
+                                <span class="font-semibold text-primary" id="hubNavExpensesSummary">₹0 all-time</span>
                                 <span class="text-on-surface-variant group-hover:text-primary font-medium">View all →</span>
                             </div>
                         </button>
@@ -659,7 +642,7 @@
                             </div>
                             <div>
                                 <h3 class="font-headline-sm text-base font-bold text-on-surface group-hover:text-primary transition-colors">Common Stock</h3>
-                                <p class="font-body-sm text-xs text-on-surface-variant mt-0.5">Milk, Maggi, detergent and shared items</p>
+                                <p class="font-body-sm text-xs text-on-surface-variant mt-0.5">Track shared physical supplies and quantities only.</p>
                             </div>
                             <div class="pt-2 border-t border-outline-variant/15 flex items-center justify-between font-label-sm text-xs">
                                 <span class="font-semibold text-tertiary" id="hubNavStockSummary">0 items</span>
@@ -677,7 +660,7 @@
                             </div>
                             <div>
                                 <h3 class="font-headline-sm text-base font-bold text-on-surface group-hover:text-primary transition-colors">IOUs</h3>
-                                <p class="font-body-sm text-xs text-on-surface-variant mt-0.5">Money and items borrowed</p>
+                                <p class="font-body-sm text-xs text-on-surface-variant mt-0.5">Track personal borrowing, lender, due date, and repayment.</p>
                             </div>
                             <div class="pt-2 border-t border-outline-variant/15 flex items-center justify-between font-label-sm text-xs">
                                 <span class="font-semibold text-secondary" id="hubNavIOUsSummary">0 active</span>
@@ -695,7 +678,7 @@
                             </div>
                             <div>
                                 <h3 class="font-headline-sm text-base font-bold text-on-surface group-hover:text-primary transition-colors">Room Wallet</h3>
-                                <p class="font-body-sm text-xs text-on-surface-variant mt-0.5">Shared room fund</p>
+                                <p class="font-body-sm text-xs text-on-surface-variant mt-0.5">Track real contributions and withdrawals from the fund.</p>
                             </div>
                             <div class="pt-2 border-t border-outline-variant/15 flex items-center justify-between font-label-sm text-xs">
                                 <span class="font-semibold text-tertiary" id="hubNavWalletSummary">₹0 available</span>
@@ -713,7 +696,7 @@
                             </div>
                             <div>
                                 <h3 class="font-headline-sm text-base font-bold text-on-surface group-hover:text-primary transition-colors">Settle Up</h3>
-                                <p class="font-body-sm text-xs text-on-surface-variant mt-0.5">Settle roommate balances</p>
+                                <p class="font-body-sm text-xs text-on-surface-variant mt-0.5">Calculate net balances and record confirmed payments.</p>
                             </div>
                             <div class="pt-2 border-t border-outline-variant/15 flex items-center justify-between font-label-sm text-xs">
                                 <span class="font-semibold text-error" id="hubNavSettleSummary">0 payments recommended</span>
@@ -731,10 +714,10 @@
                             </div>
                             <div>
                                 <h3 class="font-headline-sm text-base font-bold text-on-surface group-hover:text-primary transition-colors">Activity</h3>
-                                <p class="font-body-sm text-xs text-on-surface-variant mt-0.5">See what happened in your room</p>
+                                <p class="font-body-sm text-xs text-on-surface-variant mt-0.5">Read a chronological log across modules; no edits here.</p>
                             </div>
                             <div class="pt-2 border-t border-outline-variant/15 flex items-center justify-between font-label-sm text-xs">
-                                <span class="font-semibold text-primary" id="hubNavActivitySummary">Real-time room log</span>
+                                <span class="font-semibold text-primary" id="hubNavActivitySummary">No activity yet</span>
                                 <span class="text-on-surface-variant group-hover:text-primary font-medium">View log →</span>
                             </div>
                         </button>
@@ -790,7 +773,7 @@
                                 🧾
                             </div>
                             <div>
-                                <span class="font-label-sm text-xs text-on-surface-variant font-medium">Total Spent This Month</span>
+                                <span class="font-label-sm text-xs text-on-surface-variant font-medium">Shared Expenses Recorded</span>
                                 <h3 class="font-headline-sm text-2xl font-extrabold text-on-surface" id="hostelExpensesTotalMonth">₹0</h3>
                             </div>
                         </div>
@@ -1024,7 +1007,7 @@
                             <h2 class="font-headline-lg text-xl md:text-2xl font-extrabold text-on-surface flex items-center gap-2">
                                 <span>📊</span> Room Activity
                             </h2>
-                            <p class="font-body-md text-xs text-on-surface-variant">See everything that happened in your room</p>
+                            <p class="font-body-md text-xs text-on-surface-variant">Review recent recorded events. This log is read-only.</p>
                         </div>
                     </div>
 
@@ -1032,7 +1015,7 @@
                     <div class="rounded-2xl bg-surface-container-lowest p-5 md:p-6 shadow-xs border border-outline-variant/20 space-y-4">
                         <div class="flex items-center justify-between">
                             <h3 class="font-headline-sm text-base font-bold text-on-surface">Activity Timeline</h3>
-                            <span class="font-label-sm text-xs text-primary font-bold">Live Room Log ⚡</span>
+                            <span class="font-label-sm text-xs text-on-surface-variant font-medium">Read-only</span>
                         </div>
 
                         <div class="flex flex-col divide-y divide-surface-container" id="hostelActivityFullFeed">
@@ -1085,47 +1068,17 @@
 
             <!-- ================= MAIN TAB 3: EXPENSES VIEW ================= -->
             <section id="mainView-expenses" class="main-view hidden space-y-6">
-                <!-- Add Expense Card & History Feed -->
-                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                    <div class="lg:col-span-5 space-y-6">
-                        <div class="rounded-2xl bg-surface-container-lowest p-6 shadow-sm border border-outline-variant/20 space-y-4">
-                            <h2 class="font-headline-sm text-lg font-bold text-on-surface">Log New Expense</h2>
-                            <form onsubmit="event.preventDefault(); handleFormAddExpense();" class="space-y-3">
-                                <div>
-                                    <label class="font-label-md text-xs text-on-surface-variant font-semibold">Title</label>
-                                    <input id="tabExpenseTitle" required type="text" placeholder="e.g. Swiggy Dinner, Groceries" class="w-full mt-1 rounded-xl bg-surface-container-low px-3.5 py-2.5 text-sm focus:outline-none border border-outline-variant/20">
-                                </div>
-                                <div class="grid grid-cols-2 gap-2">
-                                    <div>
-                                        <label class="font-label-md text-xs text-on-surface-variant font-semibold">Amount (₹)</label>
-                                        <input id="tabExpenseAmount" required type="number" step="any" placeholder="0.00" class="w-full mt-1 rounded-xl bg-surface-container-low px-3.5 py-2.5 text-sm focus:outline-none border border-outline-variant/20">
-                                    </div>
-                                    <div>
-                                        <label class="font-label-md text-xs text-on-surface-variant font-semibold">Category</label>
-                                        <select id="tabExpenseCategory" class="w-full mt-1 rounded-xl bg-surface-container-low px-3.5 py-2.5 text-sm focus:outline-none border border-outline-variant/20">
-                                            <option value="Food & Mess">🍜 Food & Mess</option>
-                                            <option value="Groceries">🛒 Groceries</option>
-                                            <option value="Wi-Fi & Bills">📶 Wi-Fi & Bills</option>
-                                            <option value="Rent & Maid">🧹 Rent & Maid</option>
-                                            <option value="Cab">🚕 Cab & Travel</option>
-                                            <option value="Other">✨ Other</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div>
-                                    <label class="font-label-md text-xs text-on-surface-variant font-semibold">Paid By</label>
-                                    <select id="tabPaidBy" class="w-full mt-1 rounded-xl bg-surface-container-low px-3.5 py-2.5 text-sm focus:outline-none border border-outline-variant/20">
-                                        <!-- Populated via JS -->
-                                    </select>
-                                </div>
-                                <button type="submit" class="w-full py-3 rounded-xl bg-primary text-on-primary font-headline-sm text-sm font-bold shadow-md hover:bg-secondary transition-all">
-                                    Add Expense
-                                </button>
-                            </form>
+                <div class="space-y-6">
+                    <div class="flex flex-wrap items-center justify-between gap-3">
+                        <div>
+                            <h2 class="font-headline-sm text-lg font-bold text-on-surface">Shared Expense Ledger</h2>
+                            <p class="font-body-md text-xs text-on-surface-variant">One shared-purchase form is used throughout the app.</p>
                         </div>
+                        <button onclick="openAddExpenseModal()" class="px-4 py-2.5 rounded-xl bg-primary text-on-primary font-label-md text-xs font-bold shadow-md hover:bg-secondary transition-all flex items-center gap-1.5">
+                            <span class="material-symbols-outlined text-[18px]">add</span> Add shared expense
+                        </button>
                     </div>
-
-                    <div class="lg:col-span-7 rounded-2xl bg-surface-container-lowest p-6 shadow-sm border border-outline-variant/20 space-y-4">
+                    <div class="rounded-2xl bg-surface-container-lowest p-6 shadow-sm border border-outline-variant/20 space-y-4">
                         <h2 class="font-headline-sm text-lg font-bold text-on-surface">Full Expense Ledger</h2>
                         <div class="flex flex-col divide-y divide-surface-container" id="expensesViewList">
                             <!-- Populated via JS -->
@@ -1245,6 +1198,11 @@
                         <!-- Populated via JS -->
                     </select>
                 </div>
+                <fieldset class="space-y-2">
+                    <legend class="font-label-md text-xs text-on-surface-variant font-semibold">Split equally between</legend>
+                    <div id="expenseSplitParticipants" class="grid grid-cols-2 gap-2"></div>
+                    <p class="text-[11px] text-on-surface-variant">Choose who shares this purchase. Payer is not added automatically.</p>
+                </fieldset>
                 <button type="submit" class="w-full py-3 rounded-xl bg-primary text-on-primary font-headline-sm text-sm font-bold shadow-md hover:bg-secondary transition-all">
                     Log Expense
                 </button>
@@ -1276,8 +1234,9 @@
                 </div>
                 <div class="grid grid-cols-2 gap-2">
                     <div>
-                        <label class="font-label-md text-xs text-on-surface-variant font-semibold">Total Cost (₹)</label>
+                        <label class="font-label-md text-xs text-on-surface-variant font-semibold">Purchase cost note (₹)</label>
                         <input id="stockItemCost" required type="number" step="any" placeholder="240" class="w-full mt-1 rounded-xl bg-surface-container-low px-3.5 py-2.5 text-sm focus:outline-none border border-outline-variant/20">
+                        <p class="mt-1 text-[10px] text-on-surface-variant">Inventory note only; does not create a shared expense or debt.</p>
                     </div>
                     <div>
                         <label class="font-label-md text-xs text-on-surface-variant font-semibold">Purchased By</label>
@@ -1372,23 +1331,35 @@
             <form onsubmit="event.preventDefault(); handleAddIOUSubmit();" class="space-y-3">
                 <div class="grid grid-cols-2 gap-2">
                     <div>
-                        <label class="font-label-md text-xs text-on-surface-variant font-semibold">Type</label>
-                        <select id="iouType" class="w-full mt-1 rounded-xl bg-surface-container-low px-3.5 py-2.5 text-sm focus:outline-none border border-outline-variant/20">
-                            <option value="Money">💵 Money (Cash/UPI)</option>
-                            <option value="Item">🔌 Item / Electronics</option>
-                            <option value="Food">🍜 Food / Snacks</option>
+                        <label for="iouType" class="font-label-md text-xs text-on-surface-variant font-semibold">Borrowed</label>
+                        <select id="iouType" onchange="toggleIOUTypeFields()" class="w-full mt-1 rounded-xl bg-surface-container-low px-3.5 py-2.5 text-sm focus:outline-none border border-outline-variant/20">
+                            <option value="Money">Money</option>
+                            <option value="Item">Personal item</option>
+                            <option value="Food">Food</option>
                         </select>
                     </div>
+                    <div id="iouAmountGroup">
+                        <label for="iouAmount" class="font-label-md text-xs text-on-surface-variant font-semibold">Amount (₹)</label>
+                        <input id="iouAmount" type="number" min="0.01" step="0.01" placeholder="0.00" class="w-full mt-1 rounded-xl bg-surface-container-low px-3.5 py-2.5 text-sm focus:outline-none border border-outline-variant/20">
+                    </div>
+                </div>
+                <div id="iouDetailsGroup" class="hidden">
+                    <label for="iouItemOrAmount" class="font-label-md text-xs text-on-surface-variant font-semibold">Item or food details</label>
+                    <input id="iouItemOrAmount" type="text" placeholder="e.g. Laptop charger" class="w-full mt-1 rounded-xl bg-surface-container-low px-3.5 py-2.5 text-sm focus:outline-none border border-outline-variant/20">
+                </div>
+                <div class="grid grid-cols-2 gap-2">
                     <div>
-                        <label class="font-label-md text-xs text-on-surface-variant font-semibold">Person</label>
-                        <select id="iouPerson" class="w-full mt-1 rounded-xl bg-surface-container-low px-3.5 py-2.5 text-sm focus:outline-none border border-outline-variant/20">
-                            <!-- Populated via JS -->
-                        </select>
+                        <label for="iouBorrower" class="font-label-md text-xs text-on-surface-variant font-semibold">Borrower</label>
+                        <select id="iouBorrower" class="w-full mt-1 rounded-xl bg-surface-container-low px-3.5 py-2.5 text-sm focus:outline-none border border-outline-variant/20"></select>
+                    </div>
+                    <div>
+                        <label for="iouLender" class="font-label-md text-xs text-on-surface-variant font-semibold">Lender</label>
+                        <select id="iouLender" class="w-full mt-1 rounded-xl bg-surface-container-low px-3.5 py-2.5 text-sm focus:outline-none border border-outline-variant/20"></select>
                     </div>
                 </div>
                 <div>
-                    <label class="font-label-md text-xs text-on-surface-variant font-semibold">Item or Amount (e.g. ₹200 or Charger or 2 Snacks)</label>
-                    <input id="iouItemOrAmount" required type="text" placeholder="e.g. ₹200 or Laptop Charger" class="w-full mt-1 rounded-xl bg-surface-container-low px-3.5 py-2.5 text-sm focus:outline-none border border-outline-variant/20">
+                    <label for="iouDueDate" class="font-label-md text-xs text-on-surface-variant font-semibold">Due date (optional)</label>
+                    <input id="iouDueDate" type="date" class="w-full mt-1 rounded-xl bg-surface-container-low px-3.5 py-2.5 text-sm focus:outline-none border border-outline-variant/20">
                 </div>
                 <div>
                     <label class="font-label-md text-xs text-on-surface-variant font-semibold">Description / Note</label>
@@ -1436,7 +1407,7 @@
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-2">
                     <span class="material-symbols-outlined text-tertiary text-[24px]">contactless</span>
-                    <h3 class="font-headline-sm text-base font-bold text-on-surface">Settle via UPI</h3>
+                    <h3 class="font-headline-sm text-base font-bold text-on-surface">Record completed payment</h3>
                 </div>
                 <button onclick="closeModal('upiSettleModal')" class="w-8 h-8 rounded-full bg-surface-container text-on-surface-variant flex items-center justify-center hover:bg-surface-container-high">×</button>
             </div>
@@ -1446,7 +1417,8 @@
             </div>
 
             <div class="space-y-2">
-                <label class="font-label-md text-xs text-on-surface-variant font-medium block">Choose Payment App:</label>
+                <p class="font-body-sm text-xs text-on-surface-variant">Complete payment outside PayYaar first. Choosing a method below records your confirmation; PayYaar does not process the payment.</p>
+                <label class="font-label-md text-xs text-on-surface-variant font-medium block">Payment method:</label>
                 <div class="grid grid-cols-2 gap-2">
                     <button onclick="confirmUPISettle('Google Pay')" class="p-2.5 rounded-xl bg-surface-container hover:bg-primary-container hover:text-on-primary text-on-surface font-label-md text-xs font-semibold flex items-center gap-2 border border-outline-variant/20 transition-all">
                         <span class="text-lg">📱</span> Google Pay
@@ -1544,6 +1516,6 @@
     <!-- TOAST NOTIFICATION CONTAINER -->
     <div id="toastContainer" class="fixed top-20 right-4 z-50 flex flex-col space-y-2 pointer-events-none"></div>
 
-    <script src="script.js?v=5.0"></script>
+    <script src="script.js?v=5.3"></script>
 </body>
 </html>
