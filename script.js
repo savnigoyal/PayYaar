@@ -181,6 +181,9 @@ function getFriendlyAuthError(code) {
     "auth/weak-password":           "🔑 Password must be at least 6 characters.",
     "auth/too-many-requests":       "⏳ Too many attempts. Please wait a moment and try again.",
     "auth/network-request-failed":  "🌐 Network error. Please check your internet connection.",
+    "auth/popup-closed-by-user":    "Google sign-in was cancelled.",
+    "auth/cancelled-popup-request": "Google sign-in was cancelled.",
+    "auth/popup-blocked":           "🚫 Popup was blocked by your browser. Please allow popups for this site."
   };
   return errors[code] || `Authentication error: ${code}`;
 }
@@ -321,6 +324,42 @@ async function handleSignUpSubmit() {
   }
   renderAllComponents();
   showToast(`Account created! Welcome to ${room}, ${name}! 🎉`, "success");
+}
+
+// ---- Google Sign-In ----
+async function handleGoogleSignIn() {
+  if (!window.__firebase) {
+    showToast("Google Sign-In requires Firebase setup. Follow the setup steps above, or use Demo Login.", "info");
+    return;
+  }
+
+  const googleButtons = ["loginGoogleBtn", "signUpGoogleBtn"]
+    .map(id => document.getElementById(id))
+    .filter(Boolean);
+  const originalContent = new Map(googleButtons.map(button => [button, button.innerHTML]));
+
+  googleButtons.forEach(button => {
+    button.disabled = true;
+    button.textContent = "Signing in with Google...";
+  });
+
+  try {
+    const result = await window.__firebase.signInWithPopup();
+    const user = result.user;
+    if (!localStorage.getItem("payyaar_room_" + user.uid)) {
+      localStorage.setItem("payyaar_room_" + user.uid, "Block B · Room 204");
+    }
+    showToast(`Welcome, ${user.displayName || user.email}! 🚀`, "success");
+  } catch (err) {
+    if (err.code !== "auth/popup-closed-by-user" && err.code !== "auth/cancelled-popup-request") {
+      showToast(getFriendlyAuthError(err.code), "error");
+    }
+  } finally {
+    googleButtons.forEach(button => {
+      button.disabled = false;
+      button.innerHTML = originalContent.get(button);
+    });
+  }
 }
 
 // ---- Demo Login ----
