@@ -11,6 +11,7 @@ let activityFeed = [];
 let settlementTransactions = [];
 let roomBudget = 0;
 let activeSettlement = null;
+let themeRotationTimer = null;
 
 let currentMainTab = "home";
 let currentHostelSubTab = "overview";
@@ -42,6 +43,56 @@ function escapeHTML(value) {
 function formatMoney(amount) {
   return Number(amount).toLocaleString(undefined, { maximumFractionDigits: 2 });
 }
+
+const THEME_MODE_KEY = "payyaar_theme_mode";
+
+function getEffectiveTheme(mode, now = new Date()) {
+  if (mode !== "half-day") return mode;
+  return now.getHours() >= 6 && now.getHours() < 18 ? "light" : "dark";
+}
+
+function applyThemeMode(mode = localStorage.getItem(THEME_MODE_KEY) || "light") {
+  if (!["light", "dark", "half-day"].includes(mode)) mode = "light";
+
+  const root = document.documentElement;
+  const effectiveTheme = getEffectiveTheme(mode);
+  root.classList.toggle("dark", effectiveTheme === "dark");
+  root.dataset.themeMode = mode;
+
+  document.querySelectorAll("[data-theme-mode]").forEach(button => {
+    const selected = button.dataset.themeMode === mode;
+    button.setAttribute("aria-pressed", String(selected));
+    button.classList.toggle("bg-primary", selected);
+    button.classList.toggle("text-on-primary", selected);
+    button.classList.toggle("shadow-xs", selected);
+    button.classList.toggle("bg-surface-container-low", !selected);
+    button.classList.toggle("text-on-surface", !selected);
+  });
+
+  if (themeRotationTimer !== null) clearTimeout(themeRotationTimer);
+  themeRotationTimer = null;
+  if (mode === "half-day") {
+    const now = new Date();
+    const nextSwitch = new Date(now);
+    if (now.getHours() < 6) nextSwitch.setHours(6, 0, 0, 0);
+    else if (now.getHours() < 18) nextSwitch.setHours(18, 0, 0, 0);
+    else {
+      nextSwitch.setDate(nextSwitch.getDate() + 1);
+      nextSwitch.setHours(6, 0, 0, 0);
+    }
+    themeRotationTimer = setTimeout(() => applyThemeMode("half-day"), nextSwitch.getTime() - now.getTime() + 50);
+  }
+}
+
+function setThemeMode(mode) {
+  if (!["light", "dark", "half-day"].includes(mode)) return;
+  localStorage.setItem(THEME_MODE_KEY, mode);
+  applyThemeMode(mode);
+  const labels = { light: "Light theme", dark: "Dark theme", "half-day": "Half-day theme rotation" };
+  showToast(`${labels[mode]} selected.`, "success");
+}
+
+applyThemeMode();
 
 function getSharedExpenses() {
   return expenses.filter(expense => expense.paidBy !== "Room Wallet" && expense.tag !== "Paid from Wallet 💳");

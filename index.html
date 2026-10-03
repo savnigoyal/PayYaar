@@ -86,7 +86,7 @@
       }
     }
     </script>
-    <link rel="stylesheet" href="style.css?v=5.1">
+    <link rel="stylesheet" href="style.css?v=5.2">
 
     <!-- ===== FIREBASE SDK (Authentication) ===== -->
     <script type="module">
@@ -184,6 +184,21 @@
                 <img alt="PayYaar Logo" class="h-12 w-auto object-contain mx-auto rounded-2xl shadow-sm" src="logo.png">
                 <h1 class="font-headline-lg text-2xl font-extrabold text-on-surface tracking-tight">PayYaar</h1>
                 <p class="font-body-md text-xs text-on-surface-variant">Hostel OS &amp; Shared Expense Ledger</p>
+            </div>
+
+            <div class="space-y-2">
+                <p class="font-label-md text-[11px] text-on-surface-variant font-semibold">Appearance</p>
+                <div class="grid grid-cols-3 gap-2" role="group" aria-label="Color theme">
+                    <button type="button" data-theme-mode="light" aria-pressed="false" onclick="setThemeMode('light')" class="flex min-h-10 items-center justify-center gap-1 rounded-xl bg-surface-container-low px-2 py-2 text-xs font-semibold text-on-surface hover:bg-surface-container transition-colors">
+                        <span class="material-symbols-outlined text-[16px]" aria-hidden="true">light_mode</span> Light
+                    </button>
+                    <button type="button" data-theme-mode="dark" aria-pressed="false" onclick="setThemeMode('dark')" class="flex min-h-10 items-center justify-center gap-1 rounded-xl bg-surface-container-low px-2 py-2 text-xs font-semibold text-on-surface hover:bg-surface-container transition-colors">
+                        <span class="material-symbols-outlined text-[16px]" aria-hidden="true">dark_mode</span> Dark
+                    </button>
+                    <button type="button" data-theme-mode="half-day" aria-pressed="false" onclick="setThemeMode('half-day')" class="flex min-h-10 items-center justify-center gap-1 rounded-xl bg-surface-container-low px-2 py-2 text-xs font-semibold text-on-surface hover:bg-surface-container transition-colors">
+                        <span class="material-symbols-outlined text-[16px]" aria-hidden="true">schedule</span> Half-day
+                    </button>
+                </div>
             </div>
 
             <!-- Login / Sign Up Tab Switcher -->
@@ -1107,6 +1122,22 @@
                         <p class="font-label-sm text-xs text-on-surface-variant" id="profileUserRoom">🏠 Hostel details not set</p>
                     </div>
 
+                    <fieldset class="space-y-2 text-left">
+                        <legend class="font-label-md text-xs text-on-surface-variant font-semibold">Appearance</legend>
+                        <div class="grid grid-cols-3 gap-2" role="group" aria-label="Color theme">
+                            <button id="themeModeLight" data-theme-mode="light" type="button" aria-pressed="false" onclick="setThemeMode('light')" class="flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-surface-container-low px-2 py-2 text-xs font-semibold text-on-surface hover:bg-surface-container transition-colors">
+                                <span class="material-symbols-outlined text-[17px]" aria-hidden="true">light_mode</span> Light
+                            </button>
+                            <button id="themeModeDark" data-theme-mode="dark" type="button" aria-pressed="false" onclick="setThemeMode('dark')" class="flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-surface-container-low px-2 py-2 text-xs font-semibold text-on-surface hover:bg-surface-container transition-colors">
+                                <span class="material-symbols-outlined text-[17px]" aria-hidden="true">dark_mode</span> Dark
+                            </button>
+                            <button id="themeModeHalfDay" data-theme-mode="half-day" type="button" aria-pressed="false" onclick="setThemeMode('half-day')" class="flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-surface-container-low px-2 py-2 text-xs font-semibold text-on-surface hover:bg-surface-container transition-colors">
+                                <span class="material-symbols-outlined text-[17px]" aria-hidden="true">schedule</span> Half-day
+                            </button>
+                        </div>
+                        <p class="text-left text-[11px] leading-relaxed text-on-surface-variant">Half-day rotation uses light from 6 AM to 6 PM and dark from 6 PM to 6 AM.</p>
+                    </fieldset>
+
                     <div class="space-y-2 pt-2">
                         <button onclick="promptSetBudget()" class="w-full p-3.5 rounded-xl bg-surface-container-low hover:bg-surface-container text-on-surface font-label-md text-xs font-semibold text-left flex items-center justify-between">
                             <span>Set Monthly Room Budget</span>
@@ -1520,6 +1551,6 @@
     <!-- TOAST NOTIFICATION CONTAINER -->
     <div id="toastContainer" class="fixed top-20 right-4 z-50 flex flex-col space-y-2 pointer-events-none"></div>
 
-    <script src="script.js?v=5.6"></script>
+    <script src="script.js?v=5.8"></script>
 </body>
 </html>

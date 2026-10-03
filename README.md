@@ -11,6 +11,7 @@ PayYaar is a browser-based expense and room-operations app for hostel groups and
 - Record personal money/item IOUs with borrower, lender, optional due date, and repayment status.
 - Track actual Room Wallet contributions and withdrawals separately from shared expenses.
 - Review a chronological, read-only activity log.
+- Choose Light, Dark, or Half-day theme rotation (light 6 AM–6 PM, dark 6 PM–6 AM).
 - Save app data in browser local storage; Firebase is used for authentication only.
 - Responsive layout for laptop, tablet, and mobile.
 
