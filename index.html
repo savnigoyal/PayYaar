@@ -1512,6 +1512,21 @@
                 </div>
             </div>
 
+            <fieldset class="space-y-2 text-left">
+                <legend class="font-label-md text-xs text-on-surface-variant font-semibold">Appearance</legend>
+                <div class="grid grid-cols-3 gap-2" role="group" aria-label="Color theme">
+                    <button type="button" data-theme-mode="light" aria-pressed="false" onclick="setThemeMode('light')" class="flex min-h-10 items-center justify-center gap-1 rounded-xl bg-surface-container-low px-2 py-2 text-xs font-semibold text-on-surface hover:bg-surface-container transition-colors">
+                        <span class="material-symbols-outlined text-[16px]" aria-hidden="true">light_mode</span> Light
+                    </button>
+                    <button type="button" data-theme-mode="dark" aria-pressed="false" onclick="setThemeMode('dark')" class="flex min-h-10 items-center justify-center gap-1 rounded-xl bg-surface-container-low px-2 py-2 text-xs font-semibold text-on-surface hover:bg-surface-container transition-colors">
+                        <span class="material-symbols-outlined text-[16px]" aria-hidden="true">dark_mode</span> Dark
+                    </button>
+                    <button type="button" data-theme-mode="half-day" aria-pressed="false" onclick="setThemeMode('half-day')" class="flex min-h-10 items-center justify-center gap-1 rounded-xl bg-surface-container-low px-2 py-2 text-xs font-semibold text-on-surface hover:bg-surface-container transition-colors">
+                        <span class="material-symbols-outlined text-[16px]" aria-hidden="true">schedule</span> Half-day
+                    </button>
+                </div>
+            </fieldset>
+
             <div class="space-y-2 pt-1">
                 <button onclick="promptSetBudget(); closeModal('profileModal');" class="w-full p-3 rounded-xl bg-surface-container-low hover:bg-surface-container text-on-surface font-label-md text-xs font-semibold text-left flex items-center justify-between">
                     <span>Set Monthly Room Budget</span>
@@ -1551,6 +1566,6 @@
     <!-- TOAST NOTIFICATION CONTAINER -->
     <div id="toastContainer" class="fixed top-20 right-4 z-50 flex flex-col space-y-2 pointer-events-none"></div>
 
-    <script src="script.js?v=5.8"></script>
+    <script src="script.js?v=5.9"></script>
 </body>
 </html>
