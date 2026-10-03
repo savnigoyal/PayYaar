@@ -16,6 +16,10 @@
     -webkit-tap-highlight-color: transparent;
   }
 
+  html:has(#loginView:not(.hidden)) {
+    overflow: hidden;
+  }
+
   body {
     overscroll-behavior-y: none;
     font-family: 'Inter', sans-serif;
