@@ -47,6 +47,36 @@ function getSharedExpenses() {
   return expenses.filter(expense => expense.paidBy !== "Room Wallet" && expense.tag !== "Paid from Wallet 💳");
 }
 
+function getCurrentMonthExpenses() {
+  const now = new Date();
+  return getSharedExpenses().filter(expense => {
+    const date = new Date(expense.date);
+    return Number.isFinite(date.getTime()) && date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth();
+  });
+}
+
+function getMonthlyBudgetStatus() {
+  if (!Number.isFinite(roomBudget) || roomBudget <= 0) return null;
+
+  const monthExpenses = getCurrentMonthExpenses();
+  const spent = monthExpenses.reduce((total, expense) => total + expense.amount, 0);
+  const remaining = Math.max(0, roomBudget - spent);
+  const recentExpenses = monthExpenses.slice(0, 5);
+  const averageTransaction = recentExpenses.length
+    ? recentExpenses.reduce((total, expense) => total + expense.amount, 0) / recentExpenses.length
+    : 0;
+  const transactionsRemaining = averageTransaction > 0 ? Math.ceil(remaining / averageTransaction) : null;
+
+  return {
+    spent,
+    remaining,
+    percent: Math.min(100, Math.round((spent / roomBudget) * 100)),
+    transactionsRemaining,
+    isExceeded: spent >= roomBudget,
+    isNear: spent < roomBudget && transactionsRemaining !== null && transactionsRemaining <= 3
+  };
+}
+
 function calculateExpenseShares(expense) {
   const participants = getUniquePeople(Array.isArray(expense.splitBetween) ? expense.splitBetween : []);
   if (participants.length === 0) return [];
@@ -455,6 +485,9 @@ function loadStoredData() {
 
   const savedSettlements = localStorage.getItem("payyaar_v5_settlements");
   settlementTransactions = savedSettlements ? JSON.parse(savedSettlements) : [];
+
+  const savedBudget = Number(localStorage.getItem("payyaar_v5_monthly_budget"));
+  roomBudget = Number.isFinite(savedBudget) && savedBudget > 0 ? savedBudget : 0;
 }
 
 function saveData() {
@@ -466,6 +499,7 @@ function saveData() {
   localStorage.setItem("payyaar_v5_bills", JSON.stringify(bills));
   localStorage.setItem("payyaar_v5_activity", JSON.stringify(activityFeed));
   localStorage.setItem("payyaar_v5_settlements", JSON.stringify(settlementTransactions));
+  localStorage.setItem("payyaar_v5_monthly_budget", String(roomBudget));
 }
 
 function renderAllComponents() {
@@ -639,6 +673,7 @@ function renderHomeView() {
 
   const homeTotalBadge = document.getElementById("homeTotalBadge");
   if (homeTotalBadge) homeTotalBadge.innerText = `₹${totalSpent.toLocaleString()} total`;
+  renderMonthlyBudgetSummary();
 
   // Net Share
   const netBalances = calculateNetBalances();
@@ -683,6 +718,60 @@ function renderHomeView() {
   renderHomeBillsPreview();
   renderSmartSettlementContainer("smartSettlementContainer", "smartSettlementBadge");
   renderHomeActivityFeed();
+}
+
+function renderMonthlyBudgetSummary() {
+  const summary = document.getElementById("homeBudgetSummary");
+  if (!summary) return;
+
+  const amountLabel = document.getElementById("homeBudgetAmount");
+  const actionButton = document.getElementById("homeBudgetAction");
+  const progressSection = document.getElementById("homeBudgetProgressSection");
+  const spentLabel = document.getElementById("homeBudgetSpent");
+  const percentLabel = document.getElementById("homeBudgetPercent");
+  const progressTrack = document.getElementById("homeBudgetProgressTrack");
+  const progressBar = document.getElementById("homeBudgetProgressBar");
+  const message = document.getElementById("homeBudgetMessage");
+  const status = getMonthlyBudgetStatus();
+
+  if (!status) {
+    if (amountLabel) amountLabel.textContent = "No limit set";
+    if (actionButton) actionButton.textContent = "Set budget";
+    progressSection?.classList.add("hidden");
+    if (message) message.textContent = "Set a monthly limit to track shared expenses against your budget.";
+    return;
+  }
+
+  if (amountLabel) amountLabel.textContent = `₹${formatMoney(roomBudget)} per month`;
+  if (actionButton) actionButton.textContent = "Edit budget";
+  progressSection?.classList.remove("hidden");
+  if (spentLabel) spentLabel.textContent = `₹${formatMoney(status.spent)} spent this month`;
+  if (percentLabel) percentLabel.textContent = `${status.percent}%`;
+  if (progressTrack) progressTrack.setAttribute("aria-valuenow", String(status.percent));
+  if (progressBar) {
+    progressBar.style.width = `${status.percent}%`;
+    progressBar.classList.toggle("bg-error", status.isExceeded || status.isNear);
+    progressBar.classList.toggle("bg-tertiary-fixed", !status.isExceeded && !status.isNear);
+  }
+
+  if (status.isExceeded) {
+    message.textContent = `Monthly budget exceeded by ₹${formatMoney(status.spent - roomBudget)}.`;
+    message.className = "text-[11px] leading-relaxed text-error-container font-semibold";
+  } else if (status.isNear) {
+    const transactionCount = status.transactionsRemaining;
+    const transactionLabel = transactionCount === 1 ? "transaction" : "transactions";
+    message.textContent = `Budget may be reached in about ${transactionCount} more ${transactionLabel} at this month's average spend.`;
+    message.className = "text-[11px] leading-relaxed text-error-container font-semibold";
+  } else if (status.percent >= 80) {
+    message.textContent = `${status.percent}% of this month's budget is used. ₹${formatMoney(status.remaining)} remains.`;
+    message.className = "text-[11px] leading-relaxed text-primary-fixed font-medium";
+  } else if (status.spent === 0) {
+    message.textContent = "No shared expenses recorded this month.";
+    message.className = "text-[11px] leading-relaxed text-primary-fixed";
+  } else {
+    message.textContent = `₹${formatMoney(status.remaining)} remains this month.`;
+    message.className = "text-[11px] leading-relaxed text-primary-fixed";
+  }
 }
 
 // ==================== 2. HOSTEL VIEW RENDERER ====================
@@ -2245,12 +2334,19 @@ function promptOtherSettlementMethod() {
 }
 
 function promptSetBudget() {
-  const newBudget = prompt("Set Monthly Room Budget Limit (₹):", roomBudget);
-  if (newBudget && !isNaN(parseFloat(newBudget))) {
-    roomBudget = parseFloat(newBudget);
-    saveData();
-    showToast(`Monthly Fund limit set to ₹${roomBudget.toLocaleString()}`, "success");
+  const response = prompt("Set monthly shared-expense budget (₹). Enter 0 to disable:", roomBudget || "");
+  if (response === null) return;
+
+  const newBudget = Number(response.trim());
+  if (!Number.isFinite(newBudget) || newBudget < 0) {
+    showToast("Enter a valid budget amount greater than or equal to zero.", "error");
+    return;
   }
+
+  roomBudget = newBudget;
+  saveData();
+  renderAllComponents();
+  showToast(roomBudget === 0 ? "Monthly budget disabled." : `Monthly budget set to ₹${formatMoney(roomBudget)}.`, "success");
 }
 
 function clearAllDataPrompt() {
@@ -2263,6 +2359,7 @@ function clearAllDataPrompt() {
     bills = [];
     activityFeed = [];
     settlementTransactions = [];
+    roomBudget = 0;
     const payyaarKeys = Object.keys(localStorage).filter(key => key.startsWith("payyaar_v5_") || key.startsWith("payyaar_room_"));
     payyaarKeys.forEach(key => localStorage.removeItem(key));
     if (currentUser && !window.__firebase) localStorage.setItem("payyaar_v5_user", JSON.stringify(currentUser));
