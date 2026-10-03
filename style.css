@@ -20,6 +20,13 @@
     overflow: hidden;
   }
 
+  body:has(#loginView:not(.hidden)) {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    overflow: hidden;
+  }
+
   body {
     overscroll-behavior-y: none;
     font-family: 'Inter', sans-serif;
