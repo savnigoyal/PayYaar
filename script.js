@@ -152,6 +152,47 @@ function getUniquePeople(people) {
   });
 }
 
+// Older app versions could save the signed-in user as their email username
+// (for example, "aditirathore515") before Firebase supplied their display name.
+// Treat that legacy label as the same person and migrate stored references.
+function normalizeCurrentUserAliases() {
+  if (!currentUser?.name || !currentUser?.email) return;
+  const name = currentUser.name.trim();
+  const emailAlias = currentUser.email.split("@")[0].trim();
+  if (!emailAlias || emailAlias.toLowerCase() === name.toLowerCase()) return;
+
+  const aliases = new Set([emailAlias.toLowerCase()]);
+  const normalize = value => typeof value === "string" && aliases.has(value.trim().toLowerCase()) ? name : value;
+  const migratedFriends = getUniquePeople(friends.map(normalize));
+  const changedFriends = JSON.stringify(friends) !== JSON.stringify(migratedFriends);
+  friends = migratedFriends;
+
+  let changedRecords = false;
+  const replaceIn = (value, key = "") => {
+    if (Array.isArray(value)) {
+      if (key === "splitBetween") {
+        const updated = getUniquePeople(value.map(normalize));
+        if (JSON.stringify(updated) !== JSON.stringify(value)) changedRecords = true;
+        return updated;
+      }
+      const updated = value.map(item => replaceIn(item));
+      if (JSON.stringify(updated) !== JSON.stringify(value)) changedRecords = true;
+      return updated;
+    }
+    if (!value || typeof value !== "object") return normalize(value);
+    for (const [childKey, childValue] of Object.entries(value)) {
+      const updated = replaceIn(childValue, childKey);
+      if (updated !== childValue) { value[childKey] = updated; changedRecords = true; }
+    }
+    return value;
+  };
+  [expenses, stock, wallet, ious, bills, activityFeed, settlementTransactions].forEach(records => {
+    if (Array.isArray(records)) records.forEach(record => replaceIn(record));
+    else replaceIn(records);
+  });
+  if (changedFriends || changedRecords) saveData();
+}
+
 // ==================== INITIALIZATION & AUTH ====================
 
 window.addEventListener("DOMContentLoaded", () => {
@@ -164,12 +205,13 @@ window.addEventListener("DOMContentLoaded", () => {
   // Firebase auth state callback (set by Firebase module in index.html)
   window.onFirebaseAuthReady = function(fbUser) {
     currentUser = fbUser;
+    normalizeCurrentUserAliases();
     const loginView = document.getElementById("loginView");
     if (loginView) loginView.classList.add("hidden");
     updateUserProfileDisplays();
 
     // Add self to friends if not present
-    if (currentUser && !friends.includes(currentUser.name)) {
+    if (currentUser && !friends.some(person => person.toLowerCase() === currentUser.name.trim().toLowerCase())) {
       friends.unshift(currentUser.name);
       saveData();
     }
